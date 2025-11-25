@@ -78,14 +78,18 @@ export async function analyzeSkillMatch(
             parameters: {
                 candidate_labels: skills.slice(0, 10),
             },
-        });
+        }) as any; // Type assertion needed for runtime API response
 
         console.log('✅ Skill matching successful!');
 
-        return result.labels.map((label, idx) => ({
+        // Runtime response has labels and scores arrays
+        const labels = result.labels || [];
+        const scores = result.scores || [];
+
+        return labels.map((label: string, idx: number) => ({
             skill: label,
-            confidence: result.scores[idx],
-            present: result.scores[idx] > 0.5,
+            confidence: scores[idx] || 0,
+            present: (scores[idx] || 0) > 0.5,
         }));
     } catch (error) {
         console.error('❌ Skill analysis failed:', error);
