@@ -1,12 +1,19 @@
-import pdf from 'pdf-parse';
+const pdfParse = require('pdf-parse-fork');
 
 export async function parsePDF(fileBuffer: Buffer): Promise<string> {
     try {
-        const data = await pdf(fileBuffer);
+        console.log('📄 Starting PDF parse with pdf-parse-fork...');
+        const data = await pdfParse(fileBuffer);
+
+        if (!data.text || data.text.trim().length === 0) {
+            throw new Error('No text content found in PDF');
+        }
+
+        console.log(`✅ PDF parsed successfully: ${data.numpages} pages, ${data.text.length} characters`);
         return data.text;
     } catch (error) {
-        console.error('Error parsing PDF:', error);
-        throw new Error('Failed to parse PDF file. Please ensure it\'s a valid PDF.');
+        console.error('❌ PDF parsing error:', error);
+        throw new Error('Failed to parse PDF file. Please ensure it\'s a valid, text-based PDF.');
     }
 }
 
