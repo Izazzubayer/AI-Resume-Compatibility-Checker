@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const ibmPlexMono = IBM_Plex_Mono({
+    weight: ['300', '400', '500', '600'],
+    subsets: ["latin"],
+    variable: '--font-ibm-plex-mono',
+});
 
 export const metadata: Metadata = {
     title: "AI Resume Compatibility Checker - Optimize Your Resume for ATS",
@@ -17,10 +21,8 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={inter.className}>
-                <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
-                    {children}
-                </div>
+            <body className={ibmPlexMono.className}>
+                {children}
             </body>
         </html>
     );
