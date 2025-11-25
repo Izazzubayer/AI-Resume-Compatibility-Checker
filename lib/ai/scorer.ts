@@ -6,7 +6,6 @@ export function calculateOverallScore(scores: CategoryScores): number {
         scores.skills * SCORE_WEIGHTS.skills +
         scores.experience * SCORE_WEIGHTS.experience +
         scores.keywords * SCORE_WEIGHTS.keywords +
-        scores.education * SCORE_WEIGHTS.education +
         scores.ats * SCORE_WEIGHTS.ats
     );
 }
@@ -78,15 +77,6 @@ export function calculateKeywordScore(
 ): number {
     if (totalKeywords === 0) return 100;
     return Math.round((matchedKeywords / totalKeywords) * 100);
-}
-
-export function calculateEducationScore(
-    hasRequiredEducation: boolean,
-    hasSimilarField: boolean
-): number {
-    if (hasRequiredEducation) return 100;
-    if (hasSimilarField) return 75;
-    return 50;
 }
 
 export function normalizeScore(score: number): number {

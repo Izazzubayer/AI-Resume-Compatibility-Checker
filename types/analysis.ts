@@ -8,6 +8,7 @@ export interface AnalysisResult {
     recommendations: Recommendation[];
     skillsAnalysis: SkillAnalysis;
     atsCompatibility: ATSAnalysis;
+    meta: AnalysisMeta;
     createdAt: Date;
 }
 
@@ -15,7 +16,6 @@ export interface CategoryScores {
     skills: number;
     experience: number;
     keywords: number;
-    education: number;
     ats: number;
 }
 
@@ -34,7 +34,7 @@ export interface SkillAnalysis {
 
 export interface SkillMatch {
     skill: string;
-    confidence: number;
+    confidence?: number;
     present: boolean;
     source?: string;
 }
@@ -49,4 +49,11 @@ export interface ScoreInterpretation {
     level: 'excellent' | 'good' | 'fair' | 'poor' | 'very-poor';
     message: string;
     color: string;
+}
+
+export interface AnalysisMeta {
+    similarityUsed: boolean;
+    similarityScore?: number | null;
+    similarityNote?: string;
+    skillConfidenceSource: 'huggingface' | 'heuristic';
 }

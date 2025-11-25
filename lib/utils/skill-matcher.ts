@@ -16,23 +16,38 @@ const SKILL_SYNONYMS: { [key: string]: string[] } = {
 };
 
 export function extractSkillsFromText(text: string): string[] {
-    const textLower = text.toLowerCase();
     const foundSkills = new Set<string>();
+
+    // Helper to escape regex special characters
+    const escapeRegExp = (string: string) => {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    };
+
+    // Helper to create a safe regex for a skill
+    const createSkillRegex = (skill: string) => {
+        const escaped = escapeRegExp(skill);
+        // If skill starts/ends with a word character, enforce word boundary
+        // This prevents "Go" matching "Good" or "Java" matching "JavaScript"
+        const startBoundary = /^\w/.test(skill) ? '\\b' : '';
+        const endBoundary = /\w$/.test(skill) ? '\\b' : '';
+        return new RegExp(`${startBoundary}${escaped}${endBoundary}`, 'i');
+    };
 
     // Check all common skills
     [...COMMON_SKILLS.technical, ...COMMON_SKILLS.soft].forEach(skill => {
-        const skillLower = skill.toLowerCase();
+        const regex = createSkillRegex(skill);
 
         // Check main skill
-        if (textLower.includes(skillLower)) {
+        if (regex.test(text)) {
             foundSkills.add(skill);
             return;
         }
 
         // Check synonyms
-        const synonyms = SKILL_SYNONYMS[skillLower] || [];
+        const synonyms = SKILL_SYNONYMS[skill.toLowerCase()] || [];
         for (const synonym of synonyms) {
-            if (textLower.includes(synonym)) {
+            const synonymRegex = createSkillRegex(synonym);
+            if (synonymRegex.test(text)) {
                 foundSkills.add(skill);
                 return;
             }

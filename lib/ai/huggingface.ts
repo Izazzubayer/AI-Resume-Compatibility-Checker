@@ -18,7 +18,8 @@ export async function getTextEmbedding(text: string): Promise<number[]> {
 
     try {
         console.log('🔄 Calling Hugging Face Embeddings API...');
-        const model = process.env.HUGGING_FACE_MODEL_EMBEDDINGS || 'sentence-transformers/all-MiniLM-L6-v2';
+        // Default to resume-specific MiniLM fine-tune
+        const model = process.env.HUGGING_FACE_MODEL_EMBEDDINGS || 'anass1209/resume-job-matcher-all-MiniLM-L6-v2';
         console.log('Using model:', model);
 
         const result = await hf.featureExtraction({

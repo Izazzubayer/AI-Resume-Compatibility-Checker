@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Upload, ArrowRight, X, Circle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function HomePage() {
     const router = useRouter();
@@ -312,9 +313,14 @@ export default function HomePage() {
 
             {/* Footer */}
             <footer className="border-t border-neutral-200 py-8 text-center">
-                <p className="text-xs text-neutral-400">
-                    AI-powered compatibility checker
-                </p>
+                <div className="flex flex-col items-center gap-4">
+                    <p className="text-xs text-neutral-400">
+                        AI-powered compatibility checker
+                    </p>
+                    <Link href="/privacy" className="text-xs text-neutral-400 hover:text-black transition-colors underline underline-offset-4">
+                        Privacy Policy
+                    </Link>
+                </div>
             </footer>
         </main>
     );

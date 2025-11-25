@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
-import { ArrowLeft, Briefcase, GraduationCap, FileText, Target, Award, CheckCircle, X, AlertTriangle, Check } from 'lucide-react';
+import { ArrowLeft, Briefcase, FileText, Target, Award, CheckCircle, X, Check } from 'lucide-react';
 import Link from 'next/link';
 import type { AnalysisResult } from '@/types/analysis';
 
@@ -44,6 +44,12 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         );
     }
 
+    const meta = analysis.meta || {
+        similarityUsed: false,
+        similarityNote: 'Similarity data unavailable (legacy result).',
+        skillConfidenceSource: 'heuristic',
+    };
+
     const categories = [
         {
             key: 'skills',
@@ -65,13 +71,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
             label: 'Language Alignment',
             description: 'You speak the same language as the job posting',
             value: analysis.categoryScores.keywords
-        },
-        {
-            key: 'education',
-            icon: GraduationCap,
-            label: 'Qualifications Match',
-            description: 'Your credentials fit the position requirements',
-            value: analysis.categoryScores.education
         },
         {
             key: 'ats',
@@ -114,8 +113,19 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             ? 'Your resume is exceptionally well-suited for this role. You\'re ready to apply with confidence.'
                             : analysis.overallScore >= 60
                                 ? 'You\'re on the right track. A few strategic improvements will make your application stand out.'
-                                : 'There\'s opportunity here. Follow the recommendations below to strengthen your candidacy.'}
+                            : 'There\'s opportunity here. Follow the recommendations below to strengthen your candidacy.'}
                     </p>
+                    {!meta.similarityUsed && (
+                        <div className="mt-10 max-w-xl mx-auto p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm">
+                            <p className="font-medium mb-1">Similarity unavailable—using heuristic-only scoring.</p>
+                            <p className="leading-relaxed text-amber-800">{meta.similarityNote || 'The Hugging Face API was unreachable, so semantic similarity is excluded from this result.'}</p>
+                        </div>
+                    )}
+                    <div className="mt-6 max-w-xl mx-auto p-4 rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-700 text-sm">
+                        <p className="leading-relaxed">
+                            Scores are derived from parsed resume text and deterministic checks. ATS compatibility is a heuristic approximation and not an official ATS verdict.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Category Scores - With Icons & Benefits */}
@@ -170,6 +180,11 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                 <div>
                                     <h3 className="text-2xl font-medium">Matched Skills</h3>
                                     <p className="text-sm text-neutral-500">You have these required skills</p>
+                                    <p className="text-xs text-neutral-500 mt-2">
+                                        {meta.skillConfidenceSource === 'huggingface'
+                                            ? 'Presence validated with Hugging Face zero-shot classification.'
+                                            : 'Matches derived from text parsing; model confidence not available.'}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex flex-wrap gap-3">
@@ -295,6 +310,9 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                         <span className="inline-block bg-neutral-100 rounded-full px-4 py-1.5 text-xs font-medium tracking-widest uppercase text-neutral-500">
                             ATS Compatibility Report
                         </span>
+                        <p className="text-sm text-neutral-500 mt-4">
+                            This report uses rule-based checks on the extracted text; it is a heuristic guide, not a vendor ATS ruling.
+                        </p>
                     </div>
                     <div className="grid md:grid-cols-2 gap-16">
                         {/* Issues Column */}
@@ -349,13 +367,18 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
             {/* Footer */}
             <footer className="border-t border-neutral-200 py-8 text-center">
-                <p className="text-xs text-neutral-400">
-                    Analysis completed on {new Date(analysis.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    })}
-                </p>
+                <div className="flex flex-col items-center gap-4">
+                    <p className="text-xs text-neutral-400">
+                        Analysis completed on {new Date(analysis.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}
+                    </p>
+                    <Link href="/privacy" className="text-xs text-neutral-400 hover:text-black transition-colors underline underline-offset-4">
+                        Privacy Policy
+                    </Link>
+                </div>
             </footer>
         </main>
     );

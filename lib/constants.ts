@@ -9,11 +9,10 @@ export const APP_CONFIG = {
 
 // Scoring Weights
 export const SCORE_WEIGHTS = {
-    skills: 0.30,
-    experience: 0.25,
-    keywords: 0.20,
-    education: 0.15,
-    ats: 0.10,
+    skills: 0.35,
+    experience: 0.30,
+    keywords: 0.23,
+    ats: 0.12,
 };
 
 // Score Interpretation Ranges

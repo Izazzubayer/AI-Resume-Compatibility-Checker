@@ -1,4 +1,4 @@
-import type { AnalysisResult, CategoryScores, Recommendation } from '@/types/analysis';
+import type { AnalysisResult, CategoryScores, Recommendation, SkillMatch } from '@/types/analysis';
 import { extractKeywords, findKeywordMatches } from '../utils/keyword-extractor';
 import { extractSkillsFromText, matchSkills } from '../utils/skill-matcher';
 import { checkATSCompatibility, generateATSRecommendations } from '../utils/ats-checker';
@@ -10,7 +10,7 @@ import {
     calculateKeywordScore,
     normalizeScore,
 } from './scorer';
-import { compareTexts } from './huggingface';
+import { analyzeSkillMatch, compareTexts } from './huggingface';
 import { generateId } from '../utils';
 
 interface AnalyzeResumeParams {
@@ -25,6 +25,7 @@ export async function analyzeResume(
     params: AnalyzeResumeParams
 ): Promise<AnalysisResult> {
     const { resumeText, jobDescription, jobTitle, seniority, fileName = 'resume.pdf' } = params;
+    const hasHuggingFaceKey = !!process.env.HUGGING_FACE_API_KEY;
 
     // Step 1: Extract keywords from job description
     const jobKeywords = extractKeywords(jobDescription, 30);
@@ -46,12 +47,21 @@ export async function analyzeResume(
     const atsCheck = checkATSCompatibility(resumeText, fileName);
 
     // Step 5: AI-powered similarity analysis
-    let similarityScore = 50; // Default fallback
-    try {
-        similarityScore = await compareTexts(resumeText, jobDescription);
-        similarityScore = normalizeScore(similarityScore * 100);
-    } catch (error) {
-        console.error('Similarity analysis failed, using fallback:', error);
+    let similarityScore: number | null = null;
+    let similarityUsed = false;
+    let similarityNote: string | undefined;
+
+    if (hasHuggingFaceKey) {
+        try {
+            similarityScore = await compareTexts(resumeText, jobDescription);
+            similarityScore = normalizeScore(similarityScore * 100);
+            similarityUsed = true;
+        } catch (error) {
+            similarityNote = 'Similarity unavailable—Hugging Face comparison failed; scoring excludes this signal.';
+            console.error('Similarity analysis failed, excluding from score:', error);
+        }
+    } else {
+        similarityNote = 'Similarity unavailable—HUGGING_FACE_API_KEY not set; scoring excludes this signal.';
     }
 
     // Step 6: Calculate category scores
@@ -59,9 +69,40 @@ export async function analyzeResume(
         skills: normalizeScore(calculateSkillsScore(skillsMatch.matched.length, jobSkills.length)),
         experience: normalizeScore(calculateExperienceScore(resumeYears, requiredYears)),
         keywords: normalizeScore(calculateKeywordScore(matchedKeywords.length, jobKeywords.length)),
-        education: normalizeScore(similarityScore * 0.8), // Using similarity as proxy for education
         ats: normalizeScore(atsCheck.score),
     };
+
+    // Attempt to derive skill confidence from model output when available
+    let skillConfidenceSource: 'huggingface' | 'heuristic' = 'heuristic';
+    let skillsWithConfidence: SkillMatch[] = skillsMatch.matched.map(skill => ({
+        skill,
+        confidence: undefined,
+        present: true,
+    }));
+
+    if (hasHuggingFaceKey && jobSkills.length > 0) {
+        try {
+            const hfSkillResults = await analyzeSkillMatch(resumeText, jobSkills.slice(0, 10));
+            const confidenceMap = new Map<string, number>();
+
+            hfSkillResults.forEach(result => {
+                confidenceMap.set(result.skill.toLowerCase(), result.confidence);
+            });
+
+            skillsWithConfidence = skillsMatch.matched.map(skill => {
+                const confidence = confidenceMap.get(skill.toLowerCase());
+                return {
+                    skill,
+                    confidence,
+                    present: confidence !== undefined ? confidence >= 0.5 : true,
+                };
+            });
+
+            skillConfidenceSource = 'huggingface';
+        } catch (error) {
+            console.error('Skill confidence analysis failed; falling back to heuristic matches:', error);
+        }
+    }
 
     // Step 7: Calculate overall score
     const overallScore = calculateOverallScore(categoryScores);
@@ -89,11 +130,7 @@ export async function analyzeResume(
         missingKeywords: missingKeywords.slice(0, 10),
         recommendations,
         skillsAnalysis: {
-            matched: skillsMatch.matched.map(skill => ({
-                skill,
-                confidence: 0.9,
-                present: true,
-            })),
+            matched: skillsWithConfidence,
             missing: skillsMatch.missing.slice(0, 10),
             matchPercentage: skillsMatch.matchPercentage,
         },
@@ -101,6 +138,12 @@ export async function analyzeResume(
             score: atsCheck.score,
             issues: atsCheck.failed,
             passedChecks: atsCheck.passed,
+        },
+        meta: {
+            similarityUsed,
+            similarityScore,
+            similarityNote,
+            skillConfidenceSource,
         },
         createdAt: new Date(),
     };
