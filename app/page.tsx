@@ -1,7 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, ArrowRight, X, Circle } from 'lucide-react';
+import { 
+    CloudUploadOutlined, 
+    ArrowRightOutlined, 
+    CloseOutlined, 
+    FileTextOutlined,
+    CheckSquareOutlined,
+    ThunderboltOutlined,
+    LineChartOutlined
+} from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -122,204 +130,357 @@ export default function HomePage() {
 
     return (
         <main className="min-h-screen bg-white">
-            {/* Hero Section */}
-            <div className="border-b border-neutral-200">
-                <div className="max-w-4xl mx-auto px-8 py-32 text-center">
-                    <h1 className="text-6xl md:text-7xl font-semibold mb-8 tracking-tight">
+            {/* Minimal Top Bar */}
+            <div className="border-b border-neutral-100">
+                <div className="max-w-7xl mx-auto px-8 sm:px-12 py-5 flex justify-between items-center">
+                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 font-medium">
                         Resume Analyzer
+                    </div>
+                    <Link 
+                        href="/privacy" 
+                        className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 hover:text-black transition-colors font-medium"
+                    >
+                        Privacy
+                    </Link>
+                </div>
+            </div>
+
+            {/* Hero Section - Apple Inspired */}
+            <div className="border-b border-neutral-100">
+                <div className="max-w-5xl mx-auto px-8 sm:px-12 py-24 text-center">
+                    <h1 className="text-[40px] sm:text-[52px] lg:text-[64px] font-semibold mb-6 tracking-[-0.02em] leading-[1.1] text-black">
+                        Find Your Resume Match
                     </h1>
-                    <p className="text-xl md:text-2xl font-light text-neutral-600 max-w-2xl mx-auto leading-relaxed">
-                        AI-powered analysis to optimize your resume for any job posting.
+                    <p className="text-[17px] sm:text-[19px] font-normal text-neutral-600 max-w-2xl mx-auto leading-[1.5] tracking-[-0.01em]">
+                        See how your resume matches to the job description.
                     </p>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="max-w-3xl mx-auto px-8 py-24">
-                {/* Step 1: Resume Upload */}
-                <div className="mb-24">
-                    <div className="mb-8">
-                        <h2 className="text-sm font-medium tracking-wide uppercase text-neutral-500 mb-2">
-                            Step 1
-                        </h2>
-                        <h3 className="text-3xl font-light">Upload Your Resume</h3>
+            {/* Main Upload Section */}
+            <div className="max-w-7xl mx-auto px-8 sm:px-12 py-24 sm:py-32">
+                
+                {/* Horizontal Layout: Upload + Job Description */}
+                <div className="grid lg:grid-cols-2 gap-8 mb-20">
+                    {/* Resume Upload */}
+                    <div>
+                        <div
+                            className={`relative border transition-all duration-300 cursor-pointer overflow-hidden h-full ${
+                                dragActive
+                                    ? 'border-black bg-neutral-50'
+                                    : file
+                                        ? 'border-black'
+                                        : 'border-neutral-200 hover:border-neutral-400'
+                            }`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                            onClick={() => !file && document.getElementById('resume-upload')?.click()}
+                        >
+                            <div className="px-8 py-12">
+                                {file ? (
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 border border-black flex items-center justify-center flex-shrink-0">
+                                                <FileTextOutlined style={{ fontSize: '18px' }} />
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="text-[15px] font-medium mb-1 tracking-[-0.01em]">{file.name}</p>
+                                                <p className="text-[12px] text-neutral-500 tracking-[-0.01em]">
+                                                    {(file.size / 1024).toFixed(1)} KB
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setFile(null);
+                                            }}
+                                            className="w-7 h-7 flex items-center justify-center border border-neutral-300 hover:border-black hover:bg-black hover:text-white transition-all flex-shrink-0"
+                                        >
+                                            <CloseOutlined style={{ fontSize: '11px' }} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="text-center">
+                                        <CloudUploadOutlined 
+                                            style={{ fontSize: '40px' }} 
+                                            className="text-neutral-300 mb-6"
+                                        />
+                                        <p className="text-[17px] font-medium mb-2 tracking-[-0.01em]">
+                                            Upload your resume
+                                        </p>
+                                        <p className="text-[13px] text-neutral-500 mb-4 tracking-[-0.01em]">
+                                            Drop file or click
+                                        </p>
+                                        <p className="text-[10px] text-neutral-400 tracking-[0.08em] uppercase font-medium">
+                                            PDF, DOC, DOCX • Max 5MB
+                                        </p>
+                                    </div>
+                                )}
+                                <input
+                                    type="file"
+                                    id="resume-upload"
+                                    className="hidden"
+                                    accept=".pdf,.doc,.docx"
+                                    onChange={handleFileChange}
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    <div
-                        className={`border-2 transition-all duration-200 cursor-pointer ${dragActive
-                            ? 'border-black bg-neutral-50'
-                            : file
-                                ? 'border-black'
-                                : 'border-neutral-300 hover:border-neutral-400'
-                            }`}
-                        onDragEnter={handleDrag}
-                        onDragLeave={handleDrag}
-                        onDragOver={handleDrag}
-                        onDrop={handleDrop}
-                        onClick={() => !file && document.getElementById('resume-upload')?.click()}
-                    >
-                        <div className="p-16">
-                            {file ? (
-                                <div className="text-center space-y-6">
-                                    <div className="inline-flex items-center justify-center w-16 h-16 border-2 border-black">
-                                        <Circle className="w-2 h-2 fill-black" />
-                                    </div>
-                                    <div>
-                                        <p className="text-lg font-medium mb-1">{file.name}</p>
-                                        <p className="text-sm text-neutral-500">
-                                            {(file.size / 1024).toFixed(1)} KB
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setFile(null);
-                                        }}
-                                        className="inline-flex items-center gap-2 text-sm hover:opacity-60 transition-opacity"
-                                    >
-                                        <X className="w-4 h-4" />
-                                        Remove
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="text-center space-y-6">
-                                    <Upload className="w-12 h-12 mx-auto text-neutral-400" />
-                                    <div>
-                                        <p className="text-lg font-light mb-2">
-                                            Drop your resume here
-                                        </p>
-                                        <p className="text-sm text-neutral-500">
-                                            or click to browse
-                                        </p>
-                                    </div>
-                                    <p className="text-xs text-neutral-400">
-                                        PDF, DOC, DOCX • Maximum 5MB
-                                    </p>
-                                </div>
-                            )}
-                            <input
-                                type="file"
-                                id="resume-upload"
-                                className="hidden"
-                                accept=".pdf,.doc,.docx"
-                                onChange={handleFileChange}
+                    {/* Job Description */}
+                    <div>
+                        <div className="border border-neutral-200 focus-within:border-black transition-colors overflow-hidden h-full">
+                            <textarea
+                                value={jobDescription}
+                                onChange={(e) => setJobDescription(e.target.value)}
+                                placeholder="Paste the job description here..."
+                                className="w-full h-full min-h-[300px] px-8 py-8 text-[15px] font-normal resize-none focus:outline-none bg-white placeholder:text-neutral-400 tracking-[-0.01em] leading-[1.6]"
                             />
                         </div>
                     </div>
                 </div>
 
-                {/* Step 2: Job Description */}
-                <div className="mb-24">
-                    <div className="mb-8">
-                        <h2 className="text-sm font-medium tracking-wide uppercase text-neutral-500 mb-2">
-                            Step 2
-                        </h2>
-                        <h3 className="text-3xl font-light">Add Job Description</h3>
-                    </div>
-
-                    <div className="border-2 border-neutral-300 focus-within:border-black transition-colors">
-                        <textarea
-                            value={jobDescription}
-                            onChange={(e) => setJobDescription(e.target.value)}
-                            placeholder="Paste the complete job description here..."
-                            className="w-full h-64 p-6 text-base font-light resize-none focus:outline-none bg-transparent"
-                        />
-                    </div>
-                </div>
-
                 {/* Error Message */}
                 {error && (
-                    <div className="mb-12 p-6 border-2 border-black bg-neutral-50">
+                    <div className="mb-12 p-6 border border-black bg-white">
                         <div className="flex items-start justify-between gap-4">
-                            <p className="text-sm font-medium">{error}</p>
+                            <p className="text-[13px] font-medium tracking-[-0.01em]">{error}</p>
                             <button
                                 onClick={() => setError('')}
-                                className="hover:opacity-60 transition-opacity flex-shrink-0"
+                                className="w-6 h-6 flex items-center justify-center hover:opacity-60 transition-opacity flex-shrink-0"
                             >
-                                <X className="w-4 h-4" />
+                                <CloseOutlined style={{ fontSize: '10px' }} />
                             </button>
                         </div>
                     </div>
                 )}
 
-                {/* Analyze Button */}
+                {/* Analyze Button - Centered & Prominent */}
                 <div className="text-center">
                     <button
                         onClick={handleAnalyze}
                         disabled={loading || !isReadyToAnalyze}
-                        className={`inline-flex items-center gap-3 px-12 py-4 text-base font-medium transition-all duration-200 ${loading || !isReadyToAnalyze
-                            ? 'border-2 border-neutral-200 text-neutral-400 cursor-not-allowed'
-                            : 'border-2 border-black hover:bg-black hover:text-white'
-                            }`}
+                        className={`group inline-flex items-center gap-3 px-16 py-5 text-[15px] font-medium tracking-[-0.01em] transition-all duration-300 ${
+                            loading || !isReadyToAnalyze
+                                ? 'border border-neutral-200 text-neutral-300 cursor-not-allowed'
+                                : 'border border-black text-black hover:bg-black hover:text-white'
+                        }`}
                     >
                         {loading ? (
                             <>
-                                <div className="w-1.5 h-1.5 bg-current rounded-full animate-pulse" />
-                                Analyzing...
+                                <div className="w-1 h-1 bg-current animate-pulse" />
+                                Analyzing
                             </>
                         ) : (
                             <>
                                 Analyze Resume
-                                <ArrowRight className="w-5 h-5" />
+                                <ArrowRightOutlined 
+                                    style={{ fontSize: '14px' }} 
+                                    className="transition-transform group-hover:translate-x-1"
+                                />
                             </>
                         )}
                     </button>
                 </div>
             </div>
 
-            {/* Features Section */}
-            <div className="border-t border-neutral-200 bg-neutral-50">
-                <div className="max-w-5xl mx-auto px-8 py-32">
-                    <h2 className="text-sm font-medium tracking-wide uppercase text-neutral-500 text-center mb-20">
-                        What You Get
-                    </h2>
+            {/* How It Works Section */}
+            <div className="border-t border-neutral-100">
+                <div className="max-w-5xl mx-auto px-8 sm:px-12 py-24 sm:py-32">
+                    <div className="text-center mb-20">
+                        <h2 className="text-[32px] sm:text-[40px] font-semibold mb-4 tracking-[-0.02em]">
+                            How it works
+                        </h2>
+                        <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
+                            Get your compatibility score in seconds
+                        </p>
+                    </div>
+
                     <div className="grid md:grid-cols-3 gap-16">
-                        <div className="text-center">
-                            <div className="mb-6">
-                                <div className="inline-flex items-center justify-center w-12 h-12 border border-black">
-                                    <Circle className="w-1.5 h-1.5 fill-black" />
+                        {/* Step 1 */}
+                        <div>
+                            <div className="mb-8">
+                                <div className="w-12 h-12 border border-black flex items-center justify-center mb-6">
+                                    <span className="text-[20px] font-semibold tracking-[-0.01em]">1</span>
+                                </div>
+                                <h3 className="text-[17px] font-semibold mb-3 tracking-[-0.01em]">
+                                    Upload your resume
+                                </h3>
+                                <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                    Drop your PDF, DOC, or DOCX file. We extract and analyze the text instantly.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Step 2 */}
+                        <div>
+                            <div className="mb-8">
+                                <div className="w-12 h-12 border border-black flex items-center justify-center mb-6">
+                                    <span className="text-[20px] font-semibold tracking-[-0.01em]">2</span>
+                                </div>
+                                <h3 className="text-[17px] font-semibold mb-3 tracking-[-0.01em]">
+                                    Paste job description
+                                </h3>
+                                <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                    Copy the complete job posting from any source and paste it into the text area.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Step 3 */}
+                        <div>
+                            <div className="mb-8">
+                                <div className="w-12 h-12 border border-black flex items-center justify-center mb-6">
+                                    <span className="text-[20px] font-semibold tracking-[-0.01em]">3</span>
+                                </div>
+                                <h3 className="text-[17px] font-semibold mb-3 tracking-[-0.01em]">
+                                    Get detailed analysis
+                                </h3>
+                                <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                    Receive a comprehensive compatibility score with actionable recommendations.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* What You'll Receive */}
+                    <div className="mt-24 pt-24 border-t border-neutral-100">
+                        <h3 className="text-[17px] font-semibold mb-12 tracking-[-0.01em] text-center">
+                            Your analysis includes
+                        </h3>
+                        <div className="grid sm:grid-cols-2 gap-x-16 gap-y-6 max-w-3xl mx-auto">
+                            <div className="flex items-start gap-4">
+                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                        Skills match score
+                                    </p>
+                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                        Identifies matched and missing skills
+                                    </p>
                                 </div>
                             </div>
-                            <h3 className="text-lg font-medium mb-3">ATS Optimization</h3>
-                            <p className="text-sm font-light text-neutral-600 leading-relaxed">
-                                Ensure your resume passes through Applicant Tracking Systems
+
+                            <div className="flex items-start gap-4">
+                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                        Experience alignment
+                                    </p>
+                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                        Compares your background with role requirements
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                        Keyword optimization
+                                    </p>
+                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                        Shows important keywords to add
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                        ATS compatibility check
+                                    </p>
+                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                        Ensures your resume passes automated screening
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                        Actionable recommendations
+                                    </p>
+                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                        Specific improvements to increase your score
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start gap-4">
+                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                </div>
+                                <div>
+                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                        Overall compatibility score
+                                    </p>
+                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                        Single number that summarizes your match
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Features Section - Refined */}
+            <div className="border-t border-neutral-100 bg-neutral-50">
+                <div className="max-w-6xl mx-auto px-8 sm:px-12 py-32">
+                    <div className="grid md:grid-cols-3 gap-20">
+                        <div>
+                            <div className="w-10 h-10 border border-black flex items-center justify-center mb-8">
+                                <CheckSquareOutlined style={{ fontSize: '18px' }} />
+                            </div>
+                            <h3 className="text-[17px] font-semibold mb-4 tracking-[-0.01em]">ATS Compatible</h3>
+                            <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                Optimized to pass through Applicant Tracking Systems used by 99% of Fortune 500 companies.
                             </p>
                         </div>
-                        <div className="text-center">
-                            <div className="mb-6">
-                                <div className="inline-flex items-center justify-center w-12 h-12 border border-black">
-                                    <Circle className="w-1.5 h-1.5 fill-black" />
-                                </div>
+                        <div>
+                            <div className="w-10 h-10 border border-black flex items-center justify-center mb-8">
+                                <ThunderboltOutlined style={{ fontSize: '18px' }} />
                             </div>
-                            <h3 className="text-lg font-medium mb-3">AI-Powered Insights</h3>
-                            <p className="text-sm font-light text-neutral-600 leading-relaxed">
-                                Get intelligent recommendations powered by advanced machine learning
+                            <h3 className="text-[17px] font-semibold mb-4 tracking-[-0.01em]">AI Insights</h3>
+                            <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                Advanced machine learning analyzes thousands of data points to provide precise recommendations.
                             </p>
                         </div>
-                        <div className="text-center">
-                            <div className="mb-6">
-                                <div className="inline-flex items-center justify-center w-12 h-12 border border-black">
-                                    <Circle className="w-1.5 h-1.5 fill-black" />
-                                </div>
+                        <div>
+                            <div className="w-10 h-10 border border-black flex items-center justify-center mb-8">
+                                <LineChartOutlined style={{ fontSize: '18px' }} />
                             </div>
-                            <h3 className="text-lg font-medium mb-3">Detailed Analysis</h3>
-                            <p className="text-sm font-light text-neutral-600 leading-relaxed">
-                                Comprehensive scoring with actionable suggestions for improvement
+                            <h3 className="text-[17px] font-semibold mb-4 tracking-[-0.01em]">Deep Analysis</h3>
+                            <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                Comprehensive scoring across skills, experience, keywords, and formatting with actionable insights.
                             </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer */}
-            <footer className="border-t border-neutral-200 py-8 text-center">
-                <div className="flex flex-col items-center gap-4">
-                    <p className="text-xs text-neutral-400">
-                        AI-powered compatibility checker
+            {/* Footer - Minimal */}
+            <footer className="border-t border-neutral-100 py-6">
+                <div className="max-w-7xl mx-auto px-8 sm:px-12">
+                    <p className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 text-center font-medium">
+                        Powered by Artificial Intelligence
                     </p>
-                    <Link href="/privacy" className="text-xs text-neutral-400 hover:text-black transition-colors underline underline-offset-4">
-                        Privacy Policy
-                    </Link>
                 </div>
             </footer>
         </main>

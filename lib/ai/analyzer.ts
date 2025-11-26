@@ -10,7 +10,7 @@ import {
     calculateKeywordScore,
     normalizeScore,
 } from './scorer';
-import { analyzeSkillMatch, compareTexts } from './huggingface';
+import { analyzeSkillMatch, compareTexts, extractAndCategorizeKeywords, analyzeRequirementCoverage } from './huggingface';
 import { generateId } from '../utils';
 
 interface AnalyzeResumeParams {
@@ -27,12 +27,74 @@ export async function analyzeResume(
     const { resumeText, jobDescription, jobTitle, seniority, fileName = 'resume.pdf' } = params;
     const hasHuggingFaceKey = !!process.env.HUGGING_FACE_API_KEY;
 
-    // Step 1: Extract keywords from job description
+    // Step 1: Extract keywords from job description (fallback)
     const jobKeywords = extractKeywords(jobDescription, 30);
     const { matched: matchedKeywords, missing: missingKeywords } = findKeywordMatches(
         resumeText,
         jobKeywords
     );
+    
+    // Step 1b: Use AI to categorize keywords if API key is available
+    let categorizedKeywordsResult;
+    
+    if (hasHuggingFaceKey) {
+        try {
+            console.log('🤖 Using AI to extract and categorize keywords...');
+            const aiCategorized = await extractAndCategorizeKeywords(jobDescription, resumeText);
+            
+            // Transform AI results to match our interface
+            categorizedKeywordsResult = {
+                technicalSkills: {
+                    matched: aiCategorized.technicalSkills
+                        .filter(k => k.inResume)
+                        .map(k => k.keyword),
+                    missing: aiCategorized.technicalSkills
+                        .filter(k => !k.inResume)
+                        .map(k => k.keyword)
+                },
+                abilities: {
+                    matched: aiCategorized.abilities
+                        .filter(k => k.inResume)
+                        .map(k => k.keyword),
+                    missing: aiCategorized.abilities
+                        .filter(k => !k.inResume)
+                        .map(k => k.keyword)
+                },
+                significantKeywords: {
+                    matched: aiCategorized.significantKeywords
+                        .filter(k => k.inResume)
+                        .map(k => k.keyword),
+                    missing: aiCategorized.significantKeywords
+                        .filter(k => !k.inResume)
+                        .map(k => k.keyword)
+                }
+            };
+            
+            console.log('✅ AI categorization successful!');
+        } catch (error) {
+            console.error('AI categorization failed, using fallback:', error);
+            // Fallback to simple categorization
+            categorizedKeywordsResult = {
+                technicalSkills: { matched: [], missing: [] },
+                abilities: { matched: [], missing: [] },
+                significantKeywords: {
+                    matched: matchedKeywords,
+                    missing: missingKeywords
+                }
+            };
+        }
+    } else {
+        console.log('ℹ️ No AI key - using fallback keyword extraction');
+        // Fallback: put everything in significant keywords
+        categorizedKeywordsResult = {
+            technicalSkills: { matched: [], missing: [] },
+            abilities: { matched: [], missing: [] },
+            significantKeywords: {
+                matched: matchedKeywords,
+                missing: missingKeywords
+            }
+        };
+    }
 
     // Step 2: Extract and match skills
     const resumeSkills = extractSkillsFromText(resumeText);
@@ -104,6 +166,24 @@ export async function analyzeResume(
         }
     }
 
+    // Step 6b: Analyze per-requirement coverage (AI-powered)
+    let requirementCoverageResults;
+    
+    if (hasHuggingFaceKey) {
+        try {
+            const requirements = extractRequirementsFromJD(jobDescription);
+            
+            if (requirements.length > 0) {
+                console.log(`📋 Found ${requirements.length} requirements in job description`);
+                requirementCoverageResults = await analyzeRequirementCoverage(resumeText, requirements);
+                console.log(`✅ Analyzed coverage for ${requirementCoverageResults.length} requirements`);
+            }
+        } catch (error) {
+            console.error('Requirement coverage analysis failed:', error);
+            // Continue without requirement coverage if it fails
+        }
+    }
+
     // Step 7: Calculate overall score
     const overallScore = calculateOverallScore(categoryScores);
 
@@ -127,7 +207,9 @@ export async function analyzeResume(
         categoryScores,
         strengths,
         weaknesses,
+        matchedKeywords: matchedKeywords.slice(0, 15),
         missingKeywords: missingKeywords.slice(0, 10),
+        categorizedKeywords: categorizedKeywordsResult,
         recommendations,
         skillsAnalysis: {
             matched: skillsWithConfidence,
@@ -139,6 +221,7 @@ export async function analyzeResume(
             issues: atsCheck.failed,
             passedChecks: atsCheck.passed,
         },
+        requirementCoverage: requirementCoverageResults,
         meta: {
             similarityUsed,
             similarityScore,
@@ -149,6 +232,64 @@ export async function analyzeResume(
     };
 
     return result;
+}
+
+/**
+ * Extract requirements from job description
+ * Looks for bullet points, numbered lists, and requirement sections
+ */
+function extractRequirementsFromJD(jobDescription: string): string[] {
+    const requirements: string[] = [];
+    
+    // Split by lines
+    const lines = jobDescription.split('\n');
+    
+    for (let line of lines) {
+        line = line.trim();
+        
+        // Skip empty lines or very short lines
+        if (!line || line.length < 10) continue;
+        
+        // Match bullet points: - • * ○ ▪
+        // Match numbered lists: 1. 2) 1:
+        // Match requirements that start with common prefixes
+        const isBullet = /^[-•*○▪]\s+/.test(line);
+        const isNumbered = /^\d+[\.\):\]]\s+/.test(line);
+        const isRequirement = /^(required|must have|should have|preferred|experience with|knowledge of|proficiency in|strong|expertise in)/i.test(line);
+        
+        if (isBullet || isNumbered || isRequirement) {
+            // Clean up the line
+            let requirement = line
+                .replace(/^[-•*○▪]\s+/, '') // Remove bullet
+                .replace(/^\d+[\.\):\]]\s+/, '') // Remove number
+                .trim();
+            
+            // Only add if meaningful length (not too short, not too long)
+            if (requirement.length >= 15 && requirement.length <= 200) {
+                requirements.push(requirement);
+            }
+        }
+    }
+    
+    // If we didn't find many requirements via bullets, try splitting by common delimiters
+    if (requirements.length < 3) {
+        const sections = jobDescription.split(/\n\n+/);
+        for (const section of sections) {
+            const sentences = section.split(/[.;]\s+/);
+            for (const sentence of sentences) {
+                const trimmed = sentence.trim();
+                if (trimmed.length >= 20 && trimmed.length <= 200) {
+                    // Check if it looks like a requirement
+                    if (/\b(experience|skill|knowledge|ability|proficient|familiar|must|required|should)\b/i.test(trimmed)) {
+                        requirements.push(trimmed);
+                    }
+                }
+            }
+        }
+    }
+    
+    // Return unique requirements, limited to top 10
+    return Array.from(new Set(requirements)).slice(0, 10);
 }
 
 function getRequiredYears(seniority: string): number {

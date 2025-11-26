@@ -1,13 +1,33 @@
+export interface KeywordCategory {
+    matched: string[];
+    missing: string[];
+}
+
+export interface CategorizedKeywords {
+    technicalSkills: KeywordCategory;
+    abilities: KeywordCategory;
+    significantKeywords: KeywordCategory;
+}
+
+export interface RequirementCoverage {
+    requirement: string;
+    coverage: 'fully covered' | 'partially covered' | 'not covered';
+    confidence: number;
+}
+
 export interface AnalysisResult {
     id: string;
     overallScore: number;
     categoryScores: CategoryScores;
     strengths: string[];
     weaknesses: string[];
+    matchedKeywords: string[];
     missingKeywords: string[];
+    categorizedKeywords: CategorizedKeywords;
     recommendations: Recommendation[];
     skillsAnalysis: SkillAnalysis;
     atsCompatibility: ATSAnalysis;
+    requirementCoverage?: RequirementCoverage[];
     meta: AnalysisMeta;
     createdAt: Date;
 }

@@ -1,7 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Shield, Lock, EyeOff, Database, Server } from 'lucide-react';
+import { 
+    LeftOutlined, 
+    SafetyOutlined, 
+    DatabaseOutlined, 
+    EyeInvisibleOutlined, 
+    CloudServerOutlined 
+} from '@ant-design/icons';
 
 export default function PrivacyPage() {
     return (
@@ -12,7 +18,7 @@ export default function PrivacyPage() {
                     href="/"
                     className="inline-flex items-center gap-2 text-sm hover:opacity-60 transition-opacity"
                 >
-                    <ArrowLeft className="w-4 h-4" />
+                    <LeftOutlined style={{ fontSize: '14px' }} />
                     <span>Back to Home</span>
                 </Link>
             </nav>
@@ -30,7 +36,7 @@ export default function PrivacyPage() {
                     <section className="border-b border-neutral-100 pb-16">
                         <div className="flex items-start gap-6">
                             <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0">
-                                <Shield className="w-6 h-6" />
+                                <SafetyOutlined style={{ fontSize: '24px' }} />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-medium mb-4">No Persistent Storage</h2>
@@ -48,7 +54,7 @@ export default function PrivacyPage() {
                     <section className="border-b border-neutral-100 pb-16">
                         <div className="flex items-start gap-6">
                             <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0">
-                                <Server className="w-6 h-6" />
+                                <CloudServerOutlined style={{ fontSize: '24px' }} />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-medium mb-4">How We Process Data</h2>
@@ -70,7 +76,7 @@ export default function PrivacyPage() {
                     <section className="border-b border-neutral-100 pb-16">
                         <div className="flex items-start gap-6">
                             <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0">
-                                <Database className="w-6 h-6" />
+                                <DatabaseOutlined style={{ fontSize: '24px' }} />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-medium mb-4">Your Data, Your Device</h2>
@@ -88,7 +94,7 @@ export default function PrivacyPage() {
                     <section>
                         <div className="flex items-start gap-6">
                             <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0">
-                                <EyeOff className="w-6 h-6" />
+                                <EyeInvisibleOutlined style={{ fontSize: '24px' }} />
                             </div>
                             <div>
                                 <h2 className="text-2xl font-medium mb-4">No Tracking or Selling</h2>

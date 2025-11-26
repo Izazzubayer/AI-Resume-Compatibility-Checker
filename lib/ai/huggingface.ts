@@ -120,3 +120,195 @@ export async function batchCompareTexts(
         throw error;
     }
 }
+
+/**
+ * AI-Powered Keyword Extraction using Zero-Shot Classification
+ * Extracts keywords from text and categorizes them intelligently
+ */
+export async function extractAndCategorizeKeywords(
+    jobDescriptionText: string,
+    resumeText: string
+): Promise<{
+    technicalSkills: { keyword: string; inResume: boolean; confidence: number }[];
+    abilities: { keyword: string; inResume: boolean; confidence: number }[];
+    significantKeywords: { keyword: string; inResume: boolean; confidence: number }[];
+}> {
+    if (!API_KEY) {
+        throw new Error('Hugging Face API key not configured');
+    }
+
+    try {
+        console.log('🔄 AI: Extracting and categorizing keywords from job description...');
+
+        // Step 1: Extract important phrases using the AI model
+        // We'll use token classification to identify key terms
+        const model = 'facebook/bart-large-mnli';
+        
+        // Extract potential keywords (simple tokenization for now, but AI will categorize)
+        const words = jobDescriptionText
+            .toLowerCase()
+            .match(/\b[a-z][a-z0-9+#.\\-]*\b/g) || [];
+        
+        // Get unique keywords (frequency > 1 or length > 4)
+        const wordFreq: { [key: string]: number } = {};
+        words.forEach(word => {
+            if (word.length > 3) {
+                wordFreq[word] = (wordFreq[word] || 0) + 1;
+            }
+        });
+
+        const potentialKeywords = Object.entries(wordFreq)
+            .filter(([_, freq]) => freq >= 2 || _.length > 5)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 30)
+            .map(([word]) => word);
+
+        console.log('🔍 AI: Found', potentialKeywords.length, 'potential keywords');
+
+        // Step 2: Use AI to categorize each keyword
+        const categories = ['technical skill', 'soft skill or ability', 'general keyword'];
+        
+        const categorizedResults = await Promise.all(
+            potentialKeywords.slice(0, 20).map(async (keyword) => {
+                try {
+                    const result = await hf.zeroShotClassification({
+                        model,
+                        inputs: `The term "${keyword}" in a job description context`,
+                        parameters: {
+                            candidate_labels: categories,
+                        },
+                    }) as any;
+
+                    const labels = result.labels || [];
+                    const scores = result.scores || [];
+                    const topCategory = labels[0];
+                    const confidence = scores[0];
+
+                    // Check if keyword exists in resume
+                    const inResume = resumeText.toLowerCase().includes(keyword);
+
+                    return {
+                        keyword,
+                        category: topCategory,
+                        confidence,
+                        inResume
+                    };
+                } catch (error) {
+                    console.error(`Error categorizing keyword "${keyword}":`, error);
+                    return null;
+                }
+            })
+        );
+
+        // Filter out nulls and categorize
+        const validResults = categorizedResults.filter(r => r !== null);
+
+        const technicalSkills = validResults
+            .filter(r => r!.category === 'technical skill')
+            .map(r => ({
+                keyword: r!.keyword,
+                inResume: r!.inResume,
+                confidence: r!.confidence
+            }));
+
+        const abilities = validResults
+            .filter(r => r!.category === 'soft skill or ability')
+            .map(r => ({
+                keyword: r!.keyword,
+                inResume: r!.inResume,
+                confidence: r!.confidence
+            }));
+
+        const significantKeywords = validResults
+            .filter(r => r!.category === 'general keyword')
+            .map(r => ({
+                keyword: r!.keyword,
+                inResume: r!.inResume,
+                confidence: r!.confidence
+            }));
+
+        console.log('✅ AI: Categorization complete!');
+        console.log(`   - Technical Skills: ${technicalSkills.length}`);
+        console.log(`   - Abilities: ${abilities.length}`);
+        console.log(`   - Significant Keywords: ${significantKeywords.length}`);
+
+        return {
+            technicalSkills,
+            abilities,
+            significantKeywords
+        };
+    } catch (error) {
+        console.error('❌ AI keyword extraction failed:', error);
+        throw error;
+    }
+}
+
+/**
+ * Analyze how well a resume covers specific job requirements
+ * Uses zero-shot classification to determine coverage level for each requirement
+ */
+export async function analyzeRequirementCoverage(
+    resumeText: string,
+    requirements: string[]
+): Promise<{ requirement: string; coverage: string; confidence: number }[]> {
+    if (!API_KEY) {
+        throw new Error('Hugging Face API key not configured');
+    }
+
+    if (requirements.length === 0) {
+        return [];
+    }
+
+    try {
+        console.log('🔄 AI: Analyzing per-requirement coverage...');
+        console.log(`   Requirements to analyze: ${requirements.length}`);
+
+        const model = 'facebook/bart-large-mnli';
+        const results = [];
+
+        // Limit to first 8 requirements to avoid rate limits and keep response time reasonable
+        const requirementsToAnalyze = requirements.slice(0, 8);
+        
+        // Use a shortened resume text for faster processing
+        const resumeSnippet = resumeText.substring(0, 800);
+
+        for (const req of requirementsToAnalyze) {
+            try {
+                const result = await hf.zeroShotClassification({
+                    model,
+                    inputs: `Resume: ${resumeSnippet}\n\nRequirement: ${req}`,
+                    parameters: {
+                        candidate_labels: ['fully covered', 'partially covered', 'not covered']
+                    }
+                }) as any;
+
+                const labels = result.labels || [];
+                const scores = result.scores || [];
+
+                results.push({
+                    requirement: req,
+                    coverage: labels[0] || 'not covered',
+                    confidence: scores[0] || 0
+                });
+
+                console.log(`   ✓ "${req.substring(0, 40)}..." → ${labels[0]}`);
+            } catch (error) {
+                console.error(`   ✗ Failed to analyze requirement: ${req}`, error);
+                // Continue with other requirements even if one fails
+                results.push({
+                    requirement: req,
+                    coverage: 'not covered',
+                    confidence: 0
+                });
+            }
+        }
+
+        console.log('✅ AI: Requirement coverage analysis complete!');
+        console.log(`   Analyzed: ${results.length} requirements`);
+
+        return results;
+    } catch (error) {
+        console.error('❌ AI requirement coverage analysis failed:', error);
+        throw error;
+    }
+}
