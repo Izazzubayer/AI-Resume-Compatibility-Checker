@@ -735,12 +735,9 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {/* Keywords Table */}
                             <div className="border border-neutral-200 overflow-hidden">
                                 {/* Table Header */}
-                                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_3fr] gap-4 p-4 bg-neutral-50 border-b border-neutral-200">
+                                <div className="grid grid-cols-[3fr_1fr_1fr] gap-4 p-4 bg-neutral-50 border-b border-neutral-200">
                                     <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600">
                                         Keyword
-                                    </div>
-                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600">
-                                        Category
                                     </div>
                                     <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600 text-center">
                                         In Resume
@@ -748,45 +745,26 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                     <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600 text-center">
                                         In Job
                                     </div>
-                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600">
-                                        Recommended Action
-                                    </div>
                                 </div>
 
                                 {/* Table Body */}
                                 {keywords.map((item, idx) => (
                                     <div 
                                         key={idx} 
-                                        className={`grid grid-cols-[2fr_1fr_1fr_1fr_3fr] gap-4 p-4 border-b border-neutral-100 hover:bg-neutral-50 transition-colors ${
-                                            !item.inResume ? 'bg-red-50' : ''
-                                        }`}
+                                        className="grid grid-cols-[3fr_1fr_1fr] gap-4 p-4 border-b border-neutral-100 hover:bg-neutral-50 transition-colors"
                                     >
-                                        <div className={`text-[13px] tracking-[-0.01em] font-medium ${
-                                            !item.inResume ? 'text-red-700' : 'text-neutral-900'
-                                        }`}>
+                                        <div className="text-[13px] tracking-[-0.01em] font-medium text-neutral-900">
                                             {item.keyword}
-                                        </div>
-                                        <div className="flex items-center">
-                                            <span className={`px-2 py-1 text-[9px] font-medium tracking-[0.08em] uppercase ${
-                                                item.priority === 1 ? 'bg-black text-white' :
-                                                item.priority === 2 ? 'bg-neutral-200 text-neutral-700' :
-                                                'bg-neutral-100 text-neutral-600'
-                                            }`}>
-                                                {item.category}
-                                </span>
                                         </div>
                                         <div className="text-center">
                                             {item.inResume ? (
                                                 <span className="inline-block w-6 h-6 bg-green-100 text-green-700 flex items-center justify-center text-[14px]">✓</span>
                                             ) : (
-                                                <span className="inline-block w-6 h-6 bg-red-100 text-red-700 flex items-center justify-center text-[14px]">—</span>
+                                                <span className="inline-block w-6 h-6 bg-neutral-100 text-neutral-400 flex items-center justify-center text-[14px]">—</span>
                                             )}
                                         </div>
                                         <div className="text-center">
                                             <span className="inline-block w-6 h-6 bg-blue-100 text-blue-700 flex items-center justify-center text-[14px]">✓</span>
-                                        </div>
-                                        <div className="text-[12px] text-neutral-600 tracking-[-0.01em] leading-[1.5]">
-                                            {item.action}
                                         </div>
                                     </div>
                                 ))}
