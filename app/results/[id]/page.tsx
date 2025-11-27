@@ -72,7 +72,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     const hasAIData = meta.similarityUsed || meta.skillConfidenceSource === 'huggingface' || analysis.categorizedKeywords;
     
     if (!hasAIData) {
-        return (
+    return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6">
                 <h2 className="text-[32px] font-semibold mb-6 tracking-[-0.02em] text-center">
                     AI Analysis Unavailable
@@ -134,14 +134,14 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                     {/* Semantic Score */}
                     {meta.similarityUsed && analysis.meta.similarityScore !== null && (
                         <div className="text-center mb-16">
-                            <div className="mb-6">
+                    <div className="mb-6">
                                 <span className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 font-medium">
                                     AI Semantic Match
-                                </span>
-                            </div>
+                        </span>
+                    </div>
                             <h1 className="text-[160px] sm:text-[200px] font-semibold tracking-[-0.04em] leading-none mb-4">
                                 {Math.round(analysis.meta.similarityScore || 0)}
-                            </h1>
+                    </h1>
                             <p className="text-[17px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                 Deep learning semantic similarity score
                             </p>
@@ -253,7 +253,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
                                 Make these changes for maximum impact on your match score
                             </p>
-                        </div>
+                </div>
 
                         <div className="space-y-4">
                             {priorityActions.map((action, index) => (
@@ -262,7 +262,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                         <div className="flex-shrink-0">
                                             <div className="w-12 h-12 border-2 border-black flex items-center justify-center text-[20px] font-semibold">
                                                 {index + 1}
-                                            </div>
+                    </div>
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between gap-4 mb-3">
@@ -350,7 +350,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                         <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
                             Visual breakdown of how you match across key dimensions
                         </p>
-                    </div>
+                                        </div>
 
                     <div className="space-y-6">
                         {matchStrength.map((dimension, idx) => (
@@ -455,8 +455,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                                 <CheckOutlined style={{ fontSize: '14px', color: '#16a34a' }} />
                                             ) : (
                                                 <CloseOutlined style={{ fontSize: '14px', color: '#dc2626' }} />
-                                            )}
-                                        </div>
+                                )}
+                            </div>
                                     ))}
                                 </div>
                                 <div className="p-6 border-t border-neutral-200 bg-neutral-50">
@@ -510,7 +510,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                 <p className="text-[13px] font-semibold mb-4 tracking-[-0.01em]">
                                     Skills not detected in your resume:
                                 </p>
-                                <div className="flex flex-wrap gap-3">
+                            <div className="flex flex-wrap gap-3">
                                     {analysis.skillsAnalysis.missing.map((skill, index) => (
                                         <span
                                             key={index}
@@ -535,13 +535,13 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
                                 AI evaluation of how well you match each specific requirement
                             </p>
-                        </div>
+                </div>
 
                         <div className="space-y-4">
                             {analysis.requirementCoverage.map((item, index) => {
                                 const getCoverageStyle = () => {
                                     if (item.coverage === 'fully covered') {
-                                        return {
+                                    return {
                                             bg: 'bg-green-50',
                                             border: 'border-green-200',
                                             text: 'text-green-800',
@@ -549,27 +549,27 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             icon: '✓'
                                         };
                                     } else if (item.coverage === 'partially covered') {
-                                        return {
+                                    return {
                                             bg: 'bg-amber-50',
                                             border: 'border-amber-200',
                                             text: 'text-amber-800',
                                             badge: 'bg-amber-100 text-amber-700',
                                             icon: '~'
-                                        };
-                                    } else {
-                                        return {
+                                    };
+                                } else {
+                                    return {
                                             bg: 'bg-red-50',
                                             border: 'border-red-200',
                                             text: 'text-red-800',
                                             badge: 'bg-red-100 text-red-700',
                                             icon: '✗'
-                                        };
-                                    }
-                                };
+                                    };
+                                }
+                            };
 
                                 const styles = getCoverageStyle();
 
-                                return (
+                            return (
                                     <div
                                         key={index}
                                         className={`border ${styles.border} ${styles.bg} p-6 hover:border-black transition-colors`}
@@ -596,13 +596,13 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             </div>
                                             <span className="text-[11px] text-neutral-500 font-mono">
                                                 {Math.round(item.confidence * 100)}%
-                                            </span>
+                                        </span>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                </div>
+                            );
+                        })}
                     </div>
+                </div>
                 )}
 
                 {/* Keyword Categorization */}
@@ -611,7 +611,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                         <div className="mb-12">
                             <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
                                 Keyword Analysis
-                            </h2>
+                        </h2>
                             <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
                                 AI-categorized keywords with {keywordDensity.matchRate}% coverage ({keywordDensity.coverage})
                             </p>
@@ -777,9 +777,9 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                                 {analysis.categorizedKeywords.significantKeywords.missing.map((keyword, idx) => (
                                                     <span key={idx} className="text-[13px] tracking-[-0.01em]">
                                                         {keyword}{idx < analysis.categorizedKeywords!.significantKeywords.missing.length - 1 ? ',' : ''}
-                                                    </span>
-                                                ))}
-                                            </div>
+                                </span>
+                            ))}
+                        </div>
                                         ) : (
                                             <p className="text-[13px] text-neutral-400 italic">All present</p>
                                         )}
@@ -837,8 +837,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                 </div>
                             )}
                         </div>
-                    </div>
-                </div>
+                                    </div>
+                                </div>
 
                 {/* Competitive Positioning */}
                 <div className="mb-32">
@@ -862,16 +862,25 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {competitive.percentile} of Applicants
                         </div>
                         <div className="max-w-md mx-auto mb-8">
-                            <div className="h-3 bg-neutral-200 relative">
+                            <div className="h-3 bg-neutral-200 relative mb-2">
                                 <div 
                                     className="absolute left-0 top-0 h-full bg-black"
                                     style={{ width: `${competitive.score}%` }}
                                 />
                             </div>
-                            <div className="flex justify-between mt-2 text-[11px] text-neutral-500">
-                                <span>0</span>
-                                <span className="font-semibold text-black">You ({competitive.score})</span>
-                                <span>100</span>
+                            <div className="relative">
+                                <div className="flex justify-between text-[11px] text-neutral-500">
+                                    <span>0</span>
+                                    <span>100</span>
+                                        </div>
+                                <div 
+                                    className="absolute top-0 transform -translate-x-1/2"
+                                    style={{ left: `${competitive.score}%` }}
+                                >
+                                    <span className="text-[11px] font-semibold text-black whitespace-nowrap">
+                                        You ({competitive.score})
+                                    </span>
+                                    </div>
                             </div>
                         </div>
                         <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
