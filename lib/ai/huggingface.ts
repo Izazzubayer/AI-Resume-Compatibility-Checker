@@ -501,26 +501,65 @@ export async function analyzeResumeStructure(resumeText: string): Promise<{
             });
         }
         
-        // Extract education
+        // Extract education - multiple patterns for flexibility
         const education: { degree: string; institution: string; year: string }[] = [];
-        const eduPattern = /(Bachelor|Master|PhD|B\.S\.|M\.S\.|MBA|B\.A\.|M\.A\.)[\s\w]*(?:\s+in\s+)?([A-Za-z\s]+)?(?:\s+[-–—]\s+)?([A-Z][a-zA-Z\s&.]+)?(?:\s+[-–—|,]\s+)?(\d{4})?/gi;
-        const eduMatches = resumeText.matchAll(eduPattern);
-        for (const match of eduMatches) {
+        
+        // Find the education section first
+        const eduSectionMatch = resumeText.match(/(?:education|academic background|qualifications)[\s:]*\n([\s\S]{0,800}?)(?=\n(?:experience|work|skills|projects|certifications|$))/i);
+        const eduSection = eduSectionMatch ? eduSectionMatch[1] : resumeText;
+        
+        // Pattern 1: Full format with all details
+        const fullPattern = /(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|MBA|B\.?A\.?|M\.?A\.?|Diploma|Associate)(?:'s)?(?:\s+of\s+|\s+in\s+|\s+)([A-Za-z\s,&-]+?)(?:\s+[-–—|]\s+|\s+,\s+|\s+from\s+|\s+at\s+|\n)([A-Z][a-zA-Z\s&.',-]+?)(?:\s+[-–—|,]\s+|\s+\()?(\d{4}(?:\s*[-–—]\s*\d{4})?|\d{4}\s*[-–—]\s*(?:present|current))?/gi;
+        const fullMatches = eduSection.matchAll(fullPattern);
+        for (const match of fullMatches) {
             education.push({
-                degree: (match[1] + (match[2] ? ' in ' + match[2] : '')).trim(),
+                degree: (match[1] + (match[2] ? ' in ' + match[2].trim() : '')).trim(),
                 institution: match[3]?.trim() || 'Not specified',
                 year: match[4]?.trim() || 'Not specified'
             });
         }
         
+        // Pattern 2: Degree + Year only (no institution clearly marked)
+        if (education.length === 0) {
+            const degreeYearPattern = /(Bachelor|Master|PhD|B\.?S\.?|M\.?S\.?|MBA|B\.?A\.?|M\.?A\.?)(?:'s)?(?:\s+of\s+|\s+in\s+)?([A-Za-z\s,&-]+?)[\s,]+(\d{4})/gi;
+            const degreeYearMatches = eduSection.matchAll(degreeYearPattern);
+            for (const match of degreeYearMatches) {
+                education.push({
+                    degree: (match[1] + (match[2] ? ' in ' + match[2].trim() : '')).trim(),
+                    institution: 'Not specified',
+                    year: match[3]?.trim() || 'Not specified'
+                });
+            }
+        }
+        
+        // Pattern 3: University name followed by degree
+        if (education.length === 0) {
+            const universityDegreePattern = /([A-Z][a-zA-Z\s&.'-]+(?:University|College|Institute|School))[\s,]+([A-Z][a-zA-Z\s&,]+?)(?:\s+[-–—|]\s+)?(\d{4})?/gi;
+            const uniMatches = eduSection.matchAll(universityDegreePattern);
+            for (const match of uniMatches) {
+                education.push({
+                    degree: match[2]?.trim() || 'Not specified',
+                    institution: match[1]?.trim() || 'Not specified',
+                    year: match[3]?.trim() || 'Not specified'
+                });
+            }
+        }
+        
+        // Filter out education entries that have no real data
+        const validEducation = education.filter(edu => 
+            edu.degree !== 'Not specified' && 
+            !edu.degree.toLowerCase().includes('not specified') &&
+            edu.degree.length > 3
+        );
+        
         console.log('✅ AI: Resume structure analysis complete!');
-        console.log(`   Sections: ${sections.length}, Skills: ${skills.length}, Experience: ${experience.length}`);
+        console.log(`   Sections: ${sections.length}, Skills: ${skills.length}, Experience: ${experience.length}, Education: ${validEducation.length}`);
         
         return {
             sections,
             skills,
             experience,
-            education,
+            education: validEducation,
             totalWords,
             sentenceCount,
             avgWordsPerSentence
