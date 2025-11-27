@@ -20,6 +20,8 @@ export default function HomePage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [dragActive, setDragActive] = useState(false);
+    const [progress, setProgress] = useState(0);
+    const [progressStatus, setProgressStatus] = useState('');
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
@@ -80,10 +82,19 @@ export default function HomePage() {
 
         setLoading(true);
         setError('');
+        setProgress(0);
+        setProgressStatus('Preparing analysis...');
 
         try {
+            // Stage 1: Parsing resume (0-30%)
+            setProgress(10);
+            setProgressStatus('Reading resume file...');
+            
             const formData = new FormData();
             formData.append('file', file);
+
+            setProgress(20);
+            setProgressStatus('Parsing resume content...');
 
             const parseResponse = await fetch('/api/parse-resume', {
                 method: 'POST',
@@ -96,6 +107,18 @@ export default function HomePage() {
             }
 
             const { data: resumeData } = await parseResponse.json();
+            
+            setProgress(35);
+            setProgressStatus('Resume parsed successfully');
+
+            // Stage 2: Analyzing with AI (30-80%)
+            setProgress(40);
+            setProgressStatus('Analyzing job description...');
+            
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            setProgress(50);
+            setProgressStatus('Matching skills with AI...');
 
             const analyzeResponse = await fetch('/api/analyze', {
                 method: 'POST',
@@ -116,11 +139,32 @@ export default function HomePage() {
                 throw new Error(errorData.error || 'Analysis failed');
             }
 
+            setProgress(70);
+            setProgressStatus('Calculating compatibility scores...');
+            
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
+            setProgress(85);
+            setProgressStatus('Generating insights...');
+
             const { data: analysisData } = await analyzeResponse.json();
+            
+            // Stage 3: Finalizing (80-100%)
+            setProgress(95);
+            setProgressStatus('Preparing your results...');
+            
             localStorage.setItem('latestAnalysis', JSON.stringify(analysisData));
+            
+            setProgress(100);
+            setProgressStatus('Complete!');
+            
+            await new Promise(resolve => setTimeout(resolve, 400));
+            
             router.push(`/results/${analysisData.id}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
+            setProgress(0);
+            setProgressStatus('');
         } finally {
             setLoading(false);
         }
@@ -167,42 +211,42 @@ export default function HomePage() {
                         <div
                             className={`relative border transition-all duration-300 cursor-pointer overflow-hidden h-full ${
                                 dragActive
-                                    ? 'border-black bg-neutral-50'
-                                    : file
-                                        ? 'border-black'
+                            ? 'border-black bg-neutral-50'
+                            : file
+                                ? 'border-black'
                                         : 'border-neutral-200 hover:border-neutral-400'
                             }`}
-                            onDragEnter={handleDrag}
-                            onDragLeave={handleDrag}
-                            onDragOver={handleDrag}
-                            onDrop={handleDrop}
-                            onClick={() => !file && document.getElementById('resume-upload')?.click()}
-                        >
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={handleDrop}
+                        onClick={() => !file && document.getElementById('resume-upload')?.click()}
+                    >
                             <div className="px-8 py-12">
-                                {file ? (
+                            {file ? (
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 border border-black flex items-center justify-center flex-shrink-0">
                                                 <FileTextOutlined style={{ fontSize: '18px' }} />
-                                            </div>
+                                    </div>
                                             <div className="text-left">
                                                 <p className="text-[15px] font-medium mb-1 tracking-[-0.01em]">{file.name}</p>
                                                 <p className="text-[12px] text-neutral-500 tracking-[-0.01em]">
-                                                    {(file.size / 1024).toFixed(1)} KB
-                                                </p>
+                                            {(file.size / 1024).toFixed(1)} KB
+                                        </p>
                                             </div>
-                                        </div>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setFile(null);
-                                            }}
-                                            className="w-7 h-7 flex items-center justify-center border border-neutral-300 hover:border-black hover:bg-black hover:text-white transition-all flex-shrink-0"
-                                        >
-                                            <CloseOutlined style={{ fontSize: '11px' }} />
-                                        </button>
                                     </div>
-                                ) : (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setFile(null);
+                                        }}
+                                            className="w-7 h-7 flex items-center justify-center border border-neutral-300 hover:border-black hover:bg-black hover:text-white transition-all flex-shrink-0"
+                                    >
+                                            <CloseOutlined style={{ fontSize: '11px' }} />
+                                    </button>
+                                </div>
+                            ) : (
                                     <div className="text-center">
                                         <CloudUploadOutlined 
                                             style={{ fontSize: '40px' }} 
@@ -216,29 +260,29 @@ export default function HomePage() {
                                         </p>
                                         <p className="text-[10px] text-neutral-400 tracking-[0.08em] uppercase font-medium">
                                             PDF, DOC, DOCX • Max 5MB
-                                        </p>
-                                    </div>
-                                )}
-                                <input
-                                    type="file"
-                                    id="resume-upload"
-                                    className="hidden"
-                                    accept=".pdf,.doc,.docx"
-                                    onChange={handleFileChange}
-                                />
-                            </div>
+                                    </p>
+                                </div>
+                            )}
+                            <input
+                                type="file"
+                                id="resume-upload"
+                                className="hidden"
+                                accept=".pdf,.doc,.docx"
+                                onChange={handleFileChange}
+                            />
                         </div>
                     </div>
+                </div>
 
                     {/* Job Description */}
                     <div>
                         <div className="border border-neutral-200 focus-within:border-black transition-colors overflow-hidden h-full">
-                            <textarea
-                                value={jobDescription}
-                                onChange={(e) => setJobDescription(e.target.value)}
+                        <textarea
+                            value={jobDescription}
+                            onChange={(e) => setJobDescription(e.target.value)}
                                 placeholder="Paste the job description here..."
                                 className="w-full h-full min-h-[300px] px-8 py-8 text-[15px] font-normal resize-none focus:outline-none bg-white placeholder:text-neutral-400 tracking-[-0.01em] leading-[1.6]"
-                            />
+                        />
                         </div>
                     </div>
                 </div>
@@ -267,7 +311,7 @@ export default function HomePage() {
                             loading || !isReadyToAnalyze
                                 ? 'border border-neutral-200 text-neutral-300 cursor-not-allowed'
                                 : 'border border-black text-black hover:bg-black hover:text-white'
-                        }`}
+                            }`}
                     >
                         {loading ? (
                             <>
@@ -293,7 +337,7 @@ export default function HomePage() {
                     <div className="text-center mb-20">
                         <h2 className="text-[32px] sm:text-[40px] font-semibold mb-4 tracking-[-0.02em]">
                             How it works
-                        </h2>
+                    </h2>
                         <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
                             Get your compatibility score in seconds
                         </p>
@@ -348,89 +392,94 @@ export default function HomePage() {
 
                     {/* What You'll Receive */}
                     <div className="mt-24 pt-24 border-t border-neutral-100">
-                        <h3 className="text-[17px] font-semibold mb-12 tracking-[-0.01em] text-center">
+                    <div className="text-center mb-20">
+                        <h2 className="text-[32px] sm:text-[40px] font-semibold mb-4 tracking-[-0.02em]">
                             Your analysis includes
-                        </h3>
-                        <div className="grid sm:grid-cols-2 gap-x-16 gap-y-6 max-w-3xl mx-auto">
+                        </h2>
+                        <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
+                            All the information you need to know about your resume and job description.
+                        </p>
+                    </div>
+                        <div className="grid sm:grid-cols-2 gap-x-16 gap-y-10 max-w-3xl mx-auto">
                             <div className="flex items-start gap-4">
-                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '18px' }} />
                                 </div>
                                 <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                    <p className="text-[17px] font-semibold tracking-[-0.01em] mb-3">
                                         Skills match score
                                     </p>
-                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                         Identifies matched and missing skills
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '18px' }} />
                                 </div>
                                 <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                    <p className="text-[17px] font-semibold tracking-[-0.01em] mb-3">
                                         Experience alignment
                                     </p>
-                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                         Compares your background with role requirements
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '18px' }} />
                                 </div>
                                 <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                    <p className="text-[17px] font-semibold tracking-[-0.01em] mb-3">
                                         Keyword optimization
                                     </p>
-                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                         Shows important keywords to add
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '18px' }} />
                                 </div>
                                 <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                    <p className="text-[17px] font-semibold tracking-[-0.01em] mb-3">
                                         ATS compatibility check
                                     </p>
-                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                         Ensures your resume passes automated screening
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '18px' }} />
                                 </div>
                                 <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                    <p className="text-[17px] font-semibold tracking-[-0.01em] mb-3">
                                         Actionable recommendations
                                     </p>
-                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                         Specific improvements to increase your score
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex items-start gap-4">
-                                <div className="w-5 h-5 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
-                                    <CheckSquareOutlined style={{ fontSize: '12px' }} />
+                                <div className="w-12 h-12 border border-black flex items-center justify-center flex-shrink-0 mt-0.5">
+                                    <CheckSquareOutlined style={{ fontSize: '18px' }} />
                                 </div>
                                 <div>
-                                    <p className="text-[15px] font-medium tracking-[-0.01em] mb-1">
+                                    <p className="text-[17px] font-semibold tracking-[-0.01em] mb-3">
                                         Overall compatibility score
                                     </p>
-                                    <p className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                         Single number that summarizes your match
                                     </p>
                                 </div>
@@ -461,7 +510,7 @@ export default function HomePage() {
                             <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
                                 Advanced machine learning analyzes thousands of data points to provide precise recommendations.
                             </p>
-                        </div>
+                                </div>
                         <div>
                             <div className="w-10 h-10 border border-black flex items-center justify-center mb-8">
                                 <LineChartOutlined style={{ fontSize: '18px' }} />
@@ -483,6 +532,69 @@ export default function HomePage() {
                     </p>
                 </div>
             </footer>
+
+            {/* Progress Modal - Sharp & Minimal */}
+            {loading && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
+                    <div className="bg-white border border-black w-full max-w-md mx-4">
+                        {/* Header */}
+                        <div className="border-b border-neutral-200 px-8 py-6">
+                            <h3 className="text-[17px] font-semibold tracking-[-0.01em]">
+                                Analyzing Resume
+                            </h3>
+                            <p className="text-[13px] text-neutral-500 mt-1 tracking-[-0.01em]">
+                                {progressStatus}
+                            </p>
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="px-8 py-8">
+                            {/* Progress Track */}
+                            <div className="w-full h-1 bg-neutral-100 relative overflow-hidden">
+                                {/* Progress Fill */}
+                                <div 
+                                    className="absolute top-0 left-0 h-full bg-black transition-all duration-500 ease-out"
+                                    style={{ width: `${progress}%` }}
+                                />
+                            </div>
+                            
+                            {/* Progress Percentage */}
+                            <div className="flex items-center justify-between mt-4">
+                                <span className="text-[13px] text-neutral-500 tracking-[-0.01em]">
+                                    Progress
+                                </span>
+                                <span className="text-[15px] font-semibold tracking-[-0.01em]">
+                                    {progress}%
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Status Indicators */}
+                        <div className="border-t border-neutral-100 px-8 py-6">
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 ${progress > 0 ? 'bg-black' : 'bg-neutral-200'}`} />
+                                    <span className={`text-[13px] tracking-[-0.01em] ${progress > 0 ? 'text-black' : 'text-neutral-400'}`}>
+                                        Parsing resume
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 ${progress >= 40 ? 'bg-black' : 'bg-neutral-200'}`} />
+                                    <span className={`text-[13px] tracking-[-0.01em] ${progress >= 40 ? 'text-black' : 'text-neutral-400'}`}>
+                                        AI analysis
+                                    </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 ${progress >= 85 ? 'bg-black' : 'bg-neutral-200'}`} />
+                                    <span className={`text-[13px] tracking-[-0.01em] ${progress >= 85 ? 'text-black' : 'text-neutral-400'}`}>
+                                        Generating insights
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
