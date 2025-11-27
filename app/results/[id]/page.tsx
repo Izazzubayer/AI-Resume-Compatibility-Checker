@@ -832,7 +832,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                     {/* ATS Issues */}
                     {resumeHealth.issues > 0 && (
                         <div className="mb-12 border border-red-200 bg-red-50/30 p-8">
-                            <div className="text-[15px] font-semibold mb-4 tracking-[-0.01em] text-red-900">⚠️ ATS Issues Found</div>
+                            <div className="text-[15px] font-semibold mb-4 tracking-[-0.01em] text-red-900">ATS Issues Found</div>
                             <ul className="grid sm:grid-cols-2 gap-3">
                                 {analysis.atsCompatibility.issues.map((issue, idx) => (
                                     <li key={idx} className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6] flex items-start gap-2">
@@ -850,7 +850,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {/* Detected Sections */}
                             {analysis.resumeStructure.sections.length > 0 && (
                                 <div className="mb-12">
-                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">📄 Resume Sections</h3>
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">Resume Sections</h3>
                                     <div className="grid gap-4">
                                         {analysis.resumeStructure.sections.map((section, idx) => (
                                             <div key={idx} className="border border-neutral-200 p-6">
@@ -875,7 +875,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {/* Work Experience */}
                             {analysis.resumeStructure.experience.length > 0 && (
                                 <div className="mb-12">
-                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">💼 Work Experience Detected</h3>
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">Work Experience Detected</h3>
                                     <div className="space-y-4">
                                         {analysis.resumeStructure.experience.map((exp, idx) => (
                                             <div key={idx} className="border-l-4 border-blue-500 pl-6 py-3 bg-neutral-50">
@@ -891,7 +891,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {/* Education */}
                             {analysis.resumeStructure.education.length > 0 && (
                                 <div className="mb-12">
-                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">🎓 Education</h3>
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">Education</h3>
                                     <div className="grid sm:grid-cols-2 gap-4">
                                         {analysis.resumeStructure.education.map((edu, idx) => (
                                             <div key={idx} className="border border-neutral-200 p-6">
@@ -907,7 +907,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {/* Extracted Skills */}
                             {analysis.resumeStructure.skills.length > 0 && (
                                 <div className="mb-12">
-                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">⚙️ Skills Identified</h3>
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">Skills Identified</h3>
                                     <div className="border border-neutral-200 p-6">
                                         <div className="flex flex-wrap gap-2">
                                             {analysis.resumeStructure.skills.slice(0, 40).map((skill, idx) => (
@@ -925,15 +925,15 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
                             {/* Content Metrics */}
                             <div className="border-t-2 border-neutral-200 pt-8">
-                                <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">📊 Content Metrics</h3>
+                                <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">Content Metrics</h3>
                                 <div className="grid sm:grid-cols-3 gap-6">
                                     <div className="text-center p-6 bg-neutral-50">
                                         <div className="text-[36px] font-semibold text-neutral-900">{analysis.resumeStructure.totalWords}</div>
                                         <div className="text-[13px] text-neutral-600 mt-2">Total Words</div>
                                         <div className="text-[11px] text-neutral-500 mt-1">
-                                            {analysis.resumeStructure.totalWords < 300 ? '⚠️ Too short' : 
-                                             analysis.resumeStructure.totalWords > 800 ? '⚠️ Might be too long' : 
-                                             '✓ Good length'}
+                                            {analysis.resumeStructure.totalWords < 300 ? 'Too short' : 
+                                             analysis.resumeStructure.totalWords > 800 ? 'Might be too long' : 
+                                             'Good length'}
                                         </div>
                                     </div>
                                     <div className="text-center p-6 bg-neutral-50">
@@ -945,7 +945,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                         <div className="text-[36px] font-semibold text-neutral-900">{analysis.resumeStructure.avgWordsPerSentence}</div>
                                         <div className="text-[13px] text-neutral-600 mt-2">Avg Words/Sentence</div>
                                         <div className="text-[11px] text-neutral-500 mt-1">
-                                            {analysis.resumeStructure.avgWordsPerSentence > 25 ? '⚠️ Complex sentences' : '✓ Clear & concise'}
+                                            {analysis.resumeStructure.avgWordsPerSentence > 25 ? 'Complex sentences' : 'Clear & concise'}
                                         </div>
                                     </div>
                                 </div>
