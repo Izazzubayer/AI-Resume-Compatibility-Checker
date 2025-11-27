@@ -760,7 +760,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             {item.inResume ? (
                                                 <span className="inline-block w-6 h-6 bg-green-100 text-green-700 flex items-center justify-center text-[14px]">✓</span>
                                             ) : (
-                                                <span className="inline-block w-6 h-6 bg-neutral-100 text-neutral-400 flex items-center justify-center text-[14px]">—</span>
+                                                <span className="inline-block w-6 h-6 bg-red-100 text-red-700 flex items-center justify-center text-[14px]">—</span>
                                             )}
                                         </div>
                                         <div className="text-center">
