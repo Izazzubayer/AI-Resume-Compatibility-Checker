@@ -773,23 +773,24 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                     );
                 })()}
 
-                {/* Resume Health Score */}
+                {/* Resume Health & Breakdown */}
                 <div className="mb-32">
                     <div className="mb-12">
                         <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
-                            Resume Health
+                            Resume Health & Breakdown
                         </h2>
                         <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
-                            How well-formatted is your resume for ATS systems
+                            Complete analysis of your resume structure, content, and ATS compatibility
                         </p>
                     </div>
 
-                    <div className="grid sm:grid-cols-2 gap-8">
+                    {/* Health Score Card */}
+                    <div className="grid md:grid-cols-3 gap-8 mb-12">
                         <div className="border-2 border-black p-12 text-center">
-                            <div className="text-[120px] font-semibold tracking-tight leading-none mb-4">
+                            <div className="text-[96px] font-semibold tracking-tight leading-none mb-4">
                                 {resumeHealth.grade}
                             </div>
-                            <div className="text-[20px] font-medium mb-2 tracking-[-0.01em]">
+                            <div className="text-[17px] font-medium mb-2 tracking-[-0.01em]">
                                 Health Score: {resumeHealth.score}%
                             </div>
                             <p className="text-[13px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
@@ -798,30 +799,160 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                         </div>
 
                         <div className="border border-neutral-200 p-8">
-                            <div className="mb-8">
-                                <div className="text-[40px] font-semibold text-green-600 mb-2">{resumeHealth.strengths}</div>
+                            <div className="mb-6">
+                                <div className="text-[48px] font-semibold text-green-600 mb-2">{resumeHealth.strengths}</div>
                                 <div className="text-[13px] text-neutral-500 tracking-[-0.01em]">Checks Passed</div>
                             </div>
-                            <div className="mb-8">
-                                <div className="text-[40px] font-semibold text-red-600 mb-2">{resumeHealth.issues}</div>
+                            <div>
+                                <div className="text-[48px] font-semibold text-red-600 mb-2">{resumeHealth.issues}</div>
                                 <div className="text-[13px] text-neutral-500 tracking-[-0.01em]">Issues Detected</div>
                             </div>
-                            {resumeHealth.issues > 0 && (
-                                <div className="pt-6 border-t border-neutral-200">
-                                    <div className="text-[13px] font-semibold mb-3 tracking-[-0.01em]">Issues:</div>
-                                    <ul className="space-y-2">
-                                        {analysis.atsCompatibility.issues.map((issue, idx) => (
-                                            <li key={idx} className="text-[13px] text-neutral-600 tracking-[-0.01em] leading-[1.6] flex items-start gap-2">
-                                                <span>•</span>
-                                                <span>{issue}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
                         </div>
+
+                        {analysis.resumeStructure && (
+                            <div className="border border-neutral-200 p-8">
+                                <div className="mb-6">
+                                    <div className="text-[48px] font-semibold text-blue-600 mb-2">{analysis.resumeStructure.totalWords}</div>
+                                    <div className="text-[13px] text-neutral-500 tracking-[-0.01em]">Total Words</div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-center">
+                                    <div>
+                                        <div className="text-[24px] font-semibold">{analysis.resumeStructure.sections.length}</div>
+                                        <div className="text-[11px] text-neutral-500">Sections</div>
+                                    </div>
+                                    <div>
+                                        <div className="text-[24px] font-semibold">{analysis.resumeStructure.avgWordsPerSentence}</div>
+                                        <div className="text-[11px] text-neutral-500">Avg Words/Sentence</div>
                                     </div>
                                 </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ATS Issues */}
+                    {resumeHealth.issues > 0 && (
+                        <div className="mb-12 border border-red-200 bg-red-50/30 p-8">
+                            <div className="text-[15px] font-semibold mb-4 tracking-[-0.01em] text-red-900">⚠️ ATS Issues Found</div>
+                            <ul className="grid sm:grid-cols-2 gap-3">
+                                {analysis.atsCompatibility.issues.map((issue, idx) => (
+                                    <li key={idx} className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6] flex items-start gap-2">
+                                        <span className="text-red-600">•</span>
+                                        <span>{issue}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Resume Structure Breakdown (AI + Logic) */}
+                    {analysis.resumeStructure && (
+                        <>
+                            {/* Detected Sections */}
+                            {analysis.resumeStructure.sections.length > 0 && (
+                                <div className="mb-12">
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">📄 Resume Sections</h3>
+                                    <div className="grid gap-4">
+                                        {analysis.resumeStructure.sections.map((section, idx) => (
+                                            <div key={idx} className="border border-neutral-200 p-6">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div className="text-[15px] font-semibold tracking-[-0.01em]">{section.name}</div>
+                                                    <div className="flex gap-4 text-[12px] text-neutral-500">
+                                                        <span>{section.wordCount} words</span>
+                                                        {section.bulletPoints > 0 && <span>{section.bulletPoints} bullets</span>}
+                                                    </div>
+                                                </div>
+                                                <div className="text-[13px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                                    {section.content.length > 200 
+                                                        ? section.content.substring(0, 200) + '...' 
+                                                        : section.content}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Work Experience */}
+                            {analysis.resumeStructure.experience.length > 0 && (
+                                <div className="mb-12">
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">💼 Work Experience Detected</h3>
+                                    <div className="space-y-4">
+                                        {analysis.resumeStructure.experience.map((exp, idx) => (
+                                            <div key={idx} className="border-l-4 border-blue-500 pl-6 py-3 bg-neutral-50">
+                                                <div className="text-[15px] font-semibold tracking-[-0.01em] text-neutral-900">{exp.title}</div>
+                                                <div className="text-[13px] text-neutral-600 mt-1">{exp.company}</div>
+                                                <div className="text-[12px] text-neutral-500 mt-1">{exp.duration}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Education */}
+                            {analysis.resumeStructure.education.length > 0 && (
+                                <div className="mb-12">
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">🎓 Education</h3>
+                                    <div className="grid sm:grid-cols-2 gap-4">
+                                        {analysis.resumeStructure.education.map((edu, idx) => (
+                                            <div key={idx} className="border border-neutral-200 p-6">
+                                                <div className="text-[14px] font-semibold tracking-[-0.01em] text-neutral-900 mb-2">{edu.degree}</div>
+                                                <div className="text-[13px] text-neutral-600">{edu.institution}</div>
+                                                <div className="text-[12px] text-neutral-500 mt-1">{edu.year}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Extracted Skills */}
+                            {analysis.resumeStructure.skills.length > 0 && (
+                                <div className="mb-12">
+                                    <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">⚙️ Skills Identified</h3>
+                                    <div className="border border-neutral-200 p-6">
+                                        <div className="flex flex-wrap gap-2">
+                                            {analysis.resumeStructure.skills.slice(0, 40).map((skill, idx) => (
+                                                <span 
+                                                    key={idx} 
+                                                    className="px-3 py-1.5 bg-neutral-100 text-neutral-700 text-[12px] font-medium tracking-[-0.01em] border border-neutral-200"
+                                                >
+                                                    {skill}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Content Metrics */}
+                            <div className="border-t-2 border-neutral-200 pt-8">
+                                <h3 className="text-[20px] font-semibold mb-6 tracking-[-0.01em]">📊 Content Metrics</h3>
+                                <div className="grid sm:grid-cols-3 gap-6">
+                                    <div className="text-center p-6 bg-neutral-50">
+                                        <div className="text-[36px] font-semibold text-neutral-900">{analysis.resumeStructure.totalWords}</div>
+                                        <div className="text-[13px] text-neutral-600 mt-2">Total Words</div>
+                                        <div className="text-[11px] text-neutral-500 mt-1">
+                                            {analysis.resumeStructure.totalWords < 300 ? '⚠️ Too short' : 
+                                             analysis.resumeStructure.totalWords > 800 ? '⚠️ Might be too long' : 
+                                             '✓ Good length'}
+                                        </div>
+                                    </div>
+                                    <div className="text-center p-6 bg-neutral-50">
+                                        <div className="text-[36px] font-semibold text-neutral-900">{analysis.resumeStructure.sentenceCount}</div>
+                                        <div className="text-[13px] text-neutral-600 mt-2">Sentences</div>
+                                        <div className="text-[11px] text-neutral-500 mt-1">Detected in resume</div>
+                                    </div>
+                                    <div className="text-center p-6 bg-neutral-50">
+                                        <div className="text-[36px] font-semibold text-neutral-900">{analysis.resumeStructure.avgWordsPerSentence}</div>
+                                        <div className="text-[13px] text-neutral-600 mt-2">Avg Words/Sentence</div>
+                                        <div className="text-[11px] text-neutral-500 mt-1">
+                                            {analysis.resumeStructure.avgWordsPerSentence > 25 ? '⚠️ Complex sentences' : '✓ Clear & concise'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
 
                 {/* Competitive Positioning */}
                 <div className="mb-32">

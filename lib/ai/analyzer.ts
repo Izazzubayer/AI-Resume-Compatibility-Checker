@@ -10,7 +10,7 @@ import {
     calculateKeywordScore,
     normalizeScore,
 } from './scorer';
-import { analyzeSkillMatch, compareTexts, extractAndCategorizeKeywords, analyzeRequirementCoverage } from './huggingface';
+import { analyzeSkillMatch, compareTexts, extractAndCategorizeKeywords, analyzeRequirementCoverage, analyzeResumeStructure } from './huggingface';
 import { generateId } from '../utils';
 
 interface AnalyzeResumeParams {
@@ -184,13 +184,25 @@ export async function analyzeResume(
         }
     }
 
-    // Step 7: Calculate overall score
+    // Step 7: Analyze resume structure (AI + Logic)
+    let resumeStructure = undefined;
+    if (process.env.HUGGING_FACE_API_KEY) {
+        try {
+            console.log('🔄 Starting resume structure analysis...');
+            resumeStructure = await analyzeResumeStructure(resumeText);
+        } catch (error) {
+            console.error('Resume structure analysis failed:', error);
+            // Continue without structure analysis if it fails
+        }
+    }
+
+    // Step 8: Calculate overall score
     const overallScore = calculateOverallScore(categoryScores);
 
-    // Step 8: Identify strengths and weaknesses
+    // Step 9: Identify strengths and weaknesses
     const { strengths, weaknesses } = identifyStrengthsWeaknesses(categoryScores);
 
-    // Step 9: Generate recommendations
+    // Step 10: Generate recommendations
     const recommendations = generateRecommendations({
         categoryScores,
         missingKeywords,
@@ -200,7 +212,7 @@ export async function analyzeResume(
         requiredYears,
     });
 
-    // Step 10: Build result
+    // Step 11: Build result
     const result: AnalysisResult = {
         id: generateId(),
         overallScore,
@@ -222,6 +234,7 @@ export async function analyzeResume(
             passedChecks: atsCheck.passed,
         },
         requirementCoverage: requirementCoverageResults,
+        resumeStructure,
         meta: {
             similarityUsed,
             similarityScore,

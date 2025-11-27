@@ -362,3 +362,106 @@ export async function analyzeRequirementCoverage(
         throw error;
     }
 }
+
+/**
+ * AI-Powered Resume Structure Analysis
+ * Analyzes and breaks down resume content intelligently
+ */
+export async function analyzeResumeStructure(resumeText: string): Promise<{
+    sections: { name: string; content: string; wordCount: number; bulletPoints: number }[];
+    skills: string[];
+    experience: { title: string; company: string; duration: string }[];
+    education: { degree: string; institution: string; year: string }[];
+    totalWords: number;
+    sentenceCount: number;
+    avgWordsPerSentence: number;
+}> {
+    if (!API_KEY) {
+        throw new Error('Hugging Face API key not configured');
+    }
+
+    try {
+        console.log('🔄 AI: Analyzing resume structure...');
+        
+        // Basic metrics
+        const totalWords = resumeText.split(/\s+/).length;
+        const sentences = resumeText.split(/[.!?]+/).filter(s => s.trim().length > 10);
+        const sentenceCount = sentences.length;
+        const avgWordsPerSentence = Math.round(totalWords / (sentenceCount || 1));
+        
+        // Extract sections using pattern matching
+        const sections: { name: string; content: string; wordCount: number; bulletPoints: number }[] = [];
+        
+        // Common section headers
+        const sectionPatterns = [
+            /(?:^|\n)(experience|work experience|professional experience|employment history)[\s:]*\n([\s\S]*?)(?=\n(?:education|skills|projects|certifications|awards|references)|$)/i,
+            /(?:^|\n)(education|academic background|qualifications)[\s:]*\n([\s\S]*?)(?=\n(?:experience|skills|projects|certifications|awards|references)|$)/i,
+            /(?:^|\n)(skills|technical skills|core competencies)[\s:]*\n([\s\S]*?)(?=\n(?:experience|education|projects|certifications|awards|references)|$)/i,
+            /(?:^|\n)(projects|key projects)[\s:]*\n([\s\S]*?)(?=\n(?:experience|education|skills|certifications|awards|references)|$)/i,
+            /(?:^|\n)(certifications?|licenses?)[\s:]*\n([\s\S]*?)(?=\n(?:experience|education|skills|projects|awards|references)|$)/i,
+        ];
+        
+        sectionPatterns.forEach(pattern => {
+            const match = resumeText.match(pattern);
+            if (match) {
+                const sectionName = match[1];
+                const content = match[2].trim();
+                const wordCount = content.split(/\s+/).length;
+                const bulletPoints = (content.match(/^[-•*]\s/gm) || []).length;
+                
+                sections.push({
+                    name: sectionName.charAt(0).toUpperCase() + sectionName.slice(1).toLowerCase(),
+                    content: content.substring(0, 500), // First 500 chars
+                    wordCount,
+                    bulletPoints
+                });
+            }
+        });
+        
+        // Extract skills (capitalize, multi-word, special chars)
+        const skillMatches = resumeText.match(/\b[A-Z][a-zA-Z]*(?:[\s.-][A-Z][a-zA-Z]*)*\b|\b[a-z]+[+#]|[a-z]+\.js|[a-zA-Z]+Script/g) || [];
+        const skills = [...new Set(skillMatches)]
+            .filter(s => s.length > 2 && s.length < 30)
+            .slice(0, 30);
+        
+        // Extract work experience entries
+        const experience: { title: string; company: string; duration: string }[] = [];
+        const expPattern = /([A-Z][a-zA-Z\s]+)(?:\s+[-–—]\s+|\s+at\s+|\s+@\s+)([A-Z][a-zA-Z\s&.]+)(?:\s+[-–—|]\s+)?(\d{4}[\s-–—](?:\d{4}|present|current))/gi;
+        const expMatches = resumeText.matchAll(expPattern);
+        for (const match of expMatches) {
+            experience.push({
+                title: match[1].trim(),
+                company: match[2].trim(),
+                duration: match[3].trim()
+            });
+        }
+        
+        // Extract education
+        const education: { degree: string; institution: string; year: string }[] = [];
+        const eduPattern = /(Bachelor|Master|PhD|B\.S\.|M\.S\.|MBA|B\.A\.|M\.A\.)[\s\w]*(?:\s+in\s+)?([A-Za-z\s]+)?(?:\s+[-–—]\s+)?([A-Z][a-zA-Z\s&.]+)?(?:\s+[-–—|,]\s+)?(\d{4})?/gi;
+        const eduMatches = resumeText.matchAll(eduPattern);
+        for (const match of eduMatches) {
+            education.push({
+                degree: (match[1] + (match[2] ? ' in ' + match[2] : '')).trim(),
+                institution: match[3]?.trim() || 'Not specified',
+                year: match[4]?.trim() || 'Not specified'
+            });
+        }
+        
+        console.log('✅ AI: Resume structure analysis complete!');
+        console.log(`   Sections: ${sections.length}, Skills: ${skills.length}, Experience: ${experience.length}`);
+        
+        return {
+            sections,
+            skills,
+            experience,
+            education,
+            totalWords,
+            sentenceCount,
+            avgWordsPerSentence
+        };
+    } catch (error) {
+        console.error('❌ AI resume structure analysis failed:', error);
+        throw error;
+    }
+}

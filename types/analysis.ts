@@ -13,8 +13,16 @@ export interface RequirementCoverage {
     requirement: string;
     coverage: 'fully covered' | 'partially covered' | 'not covered';
     confidence: number;
-    userHas?: string; // What the user actually has based on resume
-    comparison?: string; // AI-generated comparison text
+}
+
+export interface ResumeStructure {
+    sections: { name: string; content: string; wordCount: number; bulletPoints: number }[];
+    skills: string[];
+    experience: { title: string; company: string; duration: string }[];
+    education: { degree: string; institution: string; year: string }[];
+    totalWords: number;
+    sentenceCount: number;
+    avgWordsPerSentence: number;
 }
 
 export interface AnalysisResult {
@@ -30,6 +38,7 @@ export interface AnalysisResult {
     skillsAnalysis: SkillAnalysis;
     atsCompatibility: ATSAnalysis;
     requirementCoverage?: RequirementCoverage[];
+    resumeStructure?: ResumeStructure;
     meta: AnalysisMeta;
     createdAt: Date;
 }
