@@ -15,7 +15,6 @@ import {
     calculateApplicationReadiness,
     generatePriorityActions,
     calculateMatchStrength,
-    calculateImprovementPotential,
     calculateApplicationConfidence,
     calculateResumeHealth,
     analyzeSkillGaps,
@@ -95,7 +94,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     const readiness = calculateApplicationReadiness(analysis);
     const priorityActions = generatePriorityActions(analysis);
     const matchStrength = calculateMatchStrength(analysis);
-    const improvement = calculateImprovementPotential(analysis);
     const confidence = calculateApplicationConfidence(analysis);
     const resumeHealth = calculateResumeHealth(analysis);
     const skillGap = analyzeSkillGaps(analysis);
@@ -289,54 +287,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                     </div>
                                 </div>
                             ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Improvement Potential */}
-                {improvement.gain > 0 && (
-                    <div className="mb-32">
-                        <div className="mb-12">
-                            <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
-                                Improvement Potential
-                            </h2>
-                            <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
-                                Your score could increase by addressing these gaps
-                            </p>
-                        </div>
-
-                        <div className="grid sm:grid-cols-2 gap-8 mb-8">
-                            <div className="border border-neutral-200 p-8">
-                                <div className="text-[13px] text-neutral-500 mb-2 tracking-[-0.01em]">Current Score</div>
-                                <div className="text-[64px] font-semibold tracking-tight leading-none mb-4">{improvement.current}</div>
-                                <div className="h-2 bg-neutral-200 relative">
-                                    <div className="absolute left-0 top-0 h-full bg-neutral-400" style={{ width: `${improvement.current}%` }} />
-                                </div>
-                            </div>
-
-                            <div className="border-2 border-black p-8">
-                                <div className="text-[13px] text-neutral-500 mb-2 tracking-[-0.01em]">Potential Score</div>
-                                <div className="text-[64px] font-semibold tracking-tight leading-none mb-4">{improvement.potential}</div>
-                                <div className="h-2 bg-neutral-200 relative">
-                                    <div className="absolute left-0 top-0 h-full bg-black" style={{ width: `${improvement.potential}%` }} />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="border border-neutral-200 p-8">
-                            <div className="flex items-center gap-3 mb-6">
-                                <RocketOutlined style={{ fontSize: '24px' }} />
-                                <span className="text-[32px] font-semibold text-green-600">+{improvement.gain}</span>
-                                <span className="text-[15px] text-neutral-600">points possible</span>
-                            </div>
-                            <div className="space-y-3">
-                                {improvement.breakdown.map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between">
-                                        <span className="text-[13px] tracking-[-0.01em]">{item.item}</span>
-                                        <span className="text-[15px] font-semibold text-green-600">+{item.points}</span>
-                                    </div>
-                                ))}
-                            </div>
                         </div>
                     </div>
                 )}
