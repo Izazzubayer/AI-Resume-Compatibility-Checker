@@ -390,6 +390,125 @@ export default function HomePage() {
                         </div>
                     </div>
 
+                    {/* 3-Tier Analysis System */}
+                    <div className="mt-24 pt-24 border-t border-neutral-100">
+                        <div className="text-center mb-20">
+                            <h2 className="text-[32px] sm:text-[40px] font-semibold mb-4 tracking-[-0.02em]">
+                                Three-layer intelligence system
+                            </h2>
+                            <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6] max-w-2xl mx-auto">
+                                Our analysis combines artificial intelligence, mathematical computation, and strategic insights to give you the complete picture.
+                            </p>
+                        </div>
+
+                        <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                            {/* Layer 1: AI Analysis */}
+                            <div className="border border-neutral-200 p-8 hover:border-black transition-colors">
+                                <div className="mb-6">
+                                    <div className="w-12 h-12 bg-black text-white flex items-center justify-center mb-4 text-[20px] font-semibold">
+                                        1
+                                    </div>
+                                    <h3 className="text-[17px] font-semibold tracking-[-0.01em] mb-2">
+                                        AI Analysis
+                                    </h3>
+                                    <p className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 font-medium">
+                                        Hugging Face Models
+                                    </p>
+                                </div>
+                                <ul className="space-y-3 text-[13px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Semantic similarity scoring using text embeddings</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Zero-shot classification for skill confidence</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>AI-powered keyword categorization</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Per-requirement coverage analysis</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Layer 2: Computed Scores */}
+                            <div className="border border-neutral-200 p-8 hover:border-black transition-colors">
+                                <div className="mb-6">
+                                    <div className="w-12 h-12 bg-black text-white flex items-center justify-center mb-4 text-[20px] font-semibold">
+                                        2
+                                    </div>
+                                    <h3 className="text-[17px] font-semibold tracking-[-0.01em] mb-2">
+                                        Computed Scores
+                                    </h3>
+                                    <p className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 font-medium">
+                                        Mathematical Analysis
+                                    </p>
+                                </div>
+                                <ul className="space-y-3 text-[13px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Skills match percentage calculation</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Experience alignment scoring</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Keyword density measurement</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>ATS compatibility check</span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            {/* Layer 3: Strategic Insights */}
+                            <div className="border border-neutral-200 p-8 hover:border-black transition-colors">
+                                <div className="mb-6">
+                                    <div className="w-12 h-12 bg-black text-white flex items-center justify-center mb-4 text-[20px] font-semibold">
+                                        3
+                                    </div>
+                                    <h3 className="text-[17px] font-semibold tracking-[-0.01em] mb-2">
+                                        Strategic Insights
+                                    </h3>
+                                    <p className="text-[11px] tracking-[0.08em] uppercase text-neutral-400 font-medium">
+                                        Actionable Intelligence
+                                    </p>
+                                </div>
+                                <ul className="space-y-3 text-[13px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Application readiness assessment</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Priority action recommendations</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Improvement potential calculator</span>
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                        <span>Competitive positioning analysis</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div className="mt-16 text-center">
+                            <p className="text-[13px] text-neutral-500 tracking-[-0.01em] leading-[1.6] max-w-3xl mx-auto">
+                                Each layer builds on the previous one: AI models provide the foundation, mathematical algorithms quantify the match, and strategic analysis translates everything into actionable steps you can take right now.
+                            </p>
+                        </div>
+                    </div>
+
                     {/* What You'll Receive */}
                     <div className="mt-24 pt-24 border-t border-neutral-100">
                     <div className="text-center mb-20">
