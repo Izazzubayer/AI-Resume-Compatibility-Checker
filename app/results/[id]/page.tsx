@@ -15,7 +15,6 @@ import {
     calculateApplicationReadiness,
     generatePriorityActions,
     calculateMatchStrength,
-    calculateApplicationConfidence,
     calculateResumeHealth,
     analyzeSkillGaps,
     analyzeKeywordDensity,
@@ -94,7 +93,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
     const readiness = calculateApplicationReadiness(analysis);
     const priorityActions = generatePriorityActions(analysis);
     const matchStrength = calculateMatchStrength(analysis);
-    const confidence = calculateApplicationConfidence(analysis);
     const resumeHealth = calculateResumeHealth(analysis);
     const skillGap = analyzeSkillGaps(analysis);
     const keywordDensity = analyzeKeywordDensity(analysis);
@@ -325,36 +323,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                 </div>
                             </div>
                         ))}
-                    </div>
-                </div>
-
-                {/* Confidence Meter */}
-                <div className="mb-32">
-                    <div className="mb-12">
-                        <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
-                            Application Confidence
-                        </h2>
-                        <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
-                            Overall confidence level based on AI analysis
-                        </p>
-                    </div>
-
-                    <div className="border-2 border-black p-12 text-center">
-                        <div className="text-[80px] font-semibold tracking-tight leading-none mb-4">
-                            {confidence.score}%
-                        </div>
-                        <div className="text-[20px] font-medium mb-6 tracking-[-0.01em]">
-                            {confidence.level} CONFIDENCE
-                        </div>
-                        <div className="max-w-md mx-auto h-3 bg-neutral-200 mb-8 relative">
-                            <div 
-                                className="absolute left-0 top-0 h-full bg-black"
-                                style={{ width: `${confidence.score}%` }}
-                            />
-                        </div>
-                        <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em] max-w-2xl mx-auto">
-                            {confidence.message}
-                        </p>
                     </div>
                 </div>
 
