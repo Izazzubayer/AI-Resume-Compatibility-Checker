@@ -418,11 +418,76 @@ export async function analyzeResumeStructure(resumeText: string): Promise<{
             }
         });
         
-        // Extract skills (capitalize, multi-word, special chars)
-        const skillMatches = resumeText.match(/\b[A-Z][a-zA-Z]*(?:[\s.-][A-Z][a-zA-Z]*)*\b|\b[a-z]+[+#]|[a-z]+\.js|[a-zA-Z]+Script/g) || [];
-        const skills = [...new Set(skillMatches)]
-            .filter(s => s.length > 2 && s.length < 30)
-            .slice(0, 30);
+        // Extract skills using AI classification
+        const skills: string[] = [];
+        
+        // Step 1: Extract potential skill candidates
+        const potentialSkills = new Set<string>();
+        
+        // Pattern 1: Technical terms with special chars (React.js, C++, Node.js, etc.)
+        const techTerms = resumeText.match(/\b[A-Za-z]+[+#]|\b[A-Za-z]+\.js\b|\b[A-Z][a-z]*Script\b/g) || [];
+        techTerms.forEach(term => potentialSkills.add(term));
+        
+        // Pattern 2: Capitalized multi-word terms (Machine Learning, User Experience, etc.)
+        const multiWordTerms = resumeText.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3}\b/g) || [];
+        multiWordTerms.forEach(term => potentialSkills.add(term));
+        
+        // Pattern 3: Common tool/software patterns (Figma, Adobe, Sketch, etc.)
+        const toolPatterns = resumeText.match(/\b[A-Z][a-z]{2,15}\b/g) || [];
+        toolPatterns.forEach(term => potentialSkills.add(term));
+        
+        // Pattern 4: Acronyms (UX, UI, API, AWS, etc.)
+        const acronyms = resumeText.match(/\b[A-Z]{2,6}\b/g) || [];
+        acronyms.forEach(term => potentialSkills.add(term));
+        
+        // Step 2: Use AI to classify which are actual skills
+        const candidates = Array.from(potentialSkills)
+            .filter(s => s.length >= 2 && s.length <= 40)
+            .slice(0, 100); // Limit to 100 candidates to avoid API limits
+        
+        // Filter out common non-skill words
+        const stopWords = new Set([
+            'The', 'This', 'That', 'These', 'Those', 'What', 'When', 'Where', 'Which', 'Who', 'Why', 'How',
+            'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December',
+            'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
+            'Experienced', 'Created', 'Developed', 'Designed', 'Led', 'Managed', 'Built', 'Implemented',
+            'Strong', 'Proven', 'Established', 'Partnered', 'Collaborated', 'Conducted', 'Delivered', 'Prepared',
+            'Portfolio', 'Resume', 'References', 'Available', 'Upon', 'Request'
+        ]);
+        
+        const filteredCandidates = candidates.filter(term => !stopWords.has(term));
+        
+        // Use AI to classify each candidate
+        console.log('🔄 AI: Classifying potential skills with AI...');
+        for (const candidate of filteredCandidates.slice(0, 50)) { // Limit to 50 for API efficiency
+            try {
+                const result = await hf.zeroShotClassification({
+                    model: 'facebook/bart-large-mnli',
+                    inputs: `"${candidate}"`,
+                    parameters: {
+                        candidate_labels: [
+                            'technical skill or software tool',
+                            'design skill or methodology',
+                            'programming language or technology',
+                            'not a skill'
+                        ]
+                    }
+                }) as any;
+                
+                const topLabel = result.labels[0];
+                const topScore = result.scores[0];
+                
+                // If AI classifies it as a skill with good confidence, keep it
+                if (topLabel !== 'not a skill' && topScore > 0.5) {
+                    skills.push(candidate);
+                }
+            } catch (error) {
+                // If AI fails for this candidate, skip it
+                continue;
+            }
+        }
+        
+        console.log(`✅ AI: Identified ${skills.length} real skills`);
         
         // Extract work experience entries
         const experience: { title: string; company: string; duration: string }[] = [];
