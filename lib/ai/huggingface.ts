@@ -123,7 +123,7 @@ export async function batchCompareTexts(
 
 /**
  * AI-Powered Keyword Extraction using Zero-Shot Classification
- * Extracts keywords from text and categorizes them intelligently
+ * Uses AI to intelligently identify and extract important keywords
  */
 export async function extractAndCategorizeKeywords(
     jobDescriptionText: string,
@@ -138,42 +138,71 @@ export async function extractAndCategorizeKeywords(
     }
 
     try {
-        console.log('🔄 AI: Extracting and categorizing keywords from job description...');
+        console.log('🔄 AI: Intelligently extracting keywords from job description...');
 
-        // Step 1: Extract important phrases using the AI model
-        // We'll use token classification to identify key terms
         const model = 'facebook/bart-large-mnli';
         
-        // Extract potential keywords (simple tokenization for now, but AI will categorize)
-        const words = jobDescriptionText
-            .toLowerCase()
-            .match(/\b[a-z][a-z0-9+#.\\-]*\b/g) || [];
+        // Step 1: Extract candidate keywords using NLP techniques
+        // Look for nouns, technical terms, and multi-word phrases
+        const sentences = jobDescriptionText.split(/[.!?\n]+/).filter(s => s.trim().length > 10);
         
-        // Get unique keywords (frequency > 1 or length > 4)
-        const wordFreq: { [key: string]: number } = {};
-        words.forEach(word => {
-            if (word.length > 3) {
-                wordFreq[word] = (wordFreq[word] || 0) + 1;
+        // Extract meaningful phrases (1-3 words)
+        const phrases: string[] = [];
+        sentences.forEach(sentence => {
+            const words = sentence.toLowerCase().match(/\b[a-z][a-z0-9+#.\\-]*\b/g) || [];
+            
+            // Single words (technical terms, skills)
+            words.forEach(word => {
+                if (word.length > 3 && !['your', 'will', 'must', 'should', 'have', 'with', 'that', 'this', 'from', 'able', 'work', 'team', 'role'].includes(word)) {
+                    phrases.push(word);
+                }
+            });
+            
+            // Two-word phrases
+            for (let i = 0; i < words.length - 1; i++) {
+                const phrase = `${words[i]} ${words[i + 1]}`;
+                if (words[i].length > 2 && words[i + 1].length > 2) {
+                    phrases.push(phrase);
+                }
             }
         });
+        
+        // Get unique phrases, prioritize longer ones and filter generic terms
+        const uniquePhrases = [...new Set(phrases)];
+        const stopPhrases = ['years experience', 'able work', 'work with', 'team member', 'looking for'];
+        const filteredPhrases = uniquePhrases.filter(p => 
+            !stopPhrases.some(stop => p.includes(stop)) &&
+            p.split(' ').length <= 3
+        );
+        
+        // Count frequency and prioritize
+        const phraseFreq: { [key: string]: number } = {};
+        filteredPhrases.forEach(phrase => {
+            phraseFreq[phrase] = (phraseFreq[phrase] || 0) + 1;
+        });
+        
+        // Prioritize: multi-word phrases + frequency
+        const potentialKeywords = Object.entries(phraseFreq)
+            .sort((a, b) => {
+                const aWords = a[0].split(' ').length;
+                const bWords = b[0].split(' ').length;
+                if (aWords !== bWords) return bWords - aWords; // Prefer multi-word
+                return b[1] - a[1]; // Then by frequency
+            })
+            .slice(0, 25)
+            .map(([phrase]) => phrase);
 
-        const potentialKeywords = Object.entries(wordFreq)
-            .filter(([_, freq]) => freq >= 2 || _.length > 5)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 30)
-            .map(([word]) => word);
+        console.log('🔍 AI: Analyzing', potentialKeywords.length, 'candidate keywords');
 
-        console.log('🔍 AI: Found', potentialKeywords.length, 'potential keywords');
-
-        // Step 2: Use AI to categorize each keyword
-        const categories = ['technical skill', 'soft skill or ability', 'general keyword'];
+        // Step 2: Use AI to determine if each phrase is important AND categorize it
+        const categories = ['important technical skill or tool', 'important soft skill or ability', 'not important'];
         
         const categorizedResults = await Promise.all(
-            potentialKeywords.slice(0, 20).map(async (keyword) => {
+            potentialKeywords.map(async (keyword) => {
                 try {
                     const result = await hf.zeroShotClassification({
                         model,
-                        inputs: `The term "${keyword}" in a job description context`,
+                        inputs: `In a job description, is "${keyword}" an important requirement? Context: technical skills include programming languages, tools, frameworks. Soft skills include communication, leadership, teamwork.`,
                         parameters: {
                             candidate_labels: categories,
                         },
@@ -184,8 +213,15 @@ export async function extractAndCategorizeKeywords(
                     const topCategory = labels[0];
                     const confidence = scores[0];
 
-                    // Check if keyword exists in resume
-                    const inResume = resumeText.toLowerCase().includes(keyword);
+                    // Only keep if AI thinks it's important
+                    if (topCategory === 'not important') {
+                        return null;
+                    }
+
+                    // Check if keyword exists in resume (flexible matching)
+                    const resumeLower = resumeText.toLowerCase();
+                    const keywordLower = keyword.toLowerCase();
+                    const inResume = resumeLower.includes(keywordLower);
 
                     return {
                         keyword,
@@ -194,7 +230,7 @@ export async function extractAndCategorizeKeywords(
                         inResume
                     };
                 } catch (error) {
-                    console.error(`Error categorizing keyword "${keyword}":`, error);
+                    console.error(`Error analyzing keyword "${keyword}":`, error);
                     return null;
                 }
             })
@@ -204,7 +240,7 @@ export async function extractAndCategorizeKeywords(
         const validResults = categorizedResults.filter(r => r !== null);
 
         const technicalSkills = validResults
-            .filter(r => r!.category === 'technical skill')
+            .filter(r => r!.category === 'important technical skill or tool')
             .map(r => ({
                 keyword: r!.keyword,
                 inResume: r!.inResume,
@@ -212,25 +248,20 @@ export async function extractAndCategorizeKeywords(
             }));
 
         const abilities = validResults
-            .filter(r => r!.category === 'soft skill or ability')
+            .filter(r => r!.category === 'important soft skill or ability')
             .map(r => ({
                 keyword: r!.keyword,
                 inResume: r!.inResume,
                 confidence: r!.confidence
             }));
 
-        const significantKeywords = validResults
-            .filter(r => r!.category === 'general keyword')
-            .map(r => ({
-                keyword: r!.keyword,
-                inResume: r!.inResume,
-                confidence: r!.confidence
-            }));
+        // Significant keywords (ones marked as important but not clearly technical or soft skills)
+        const significantKeywords: { keyword: string; inResume: boolean; confidence: number }[] = [];
 
-        console.log('✅ AI: Categorization complete!');
+        console.log('✅ AI: Intelligent extraction complete!');
         console.log(`   - Technical Skills: ${technicalSkills.length}`);
         console.log(`   - Abilities: ${abilities.length}`);
-        console.log(`   - Significant Keywords: ${significantKeywords.length}`);
+        console.log(`   - Context Keywords: ${significantKeywords.length}`);
 
         return {
             technicalSkills,
@@ -250,13 +281,7 @@ export async function extractAndCategorizeKeywords(
 export async function analyzeRequirementCoverage(
     resumeText: string,
     requirements: string[]
-): Promise<{ 
-    requirement: string; 
-    coverage: 'fully covered' | 'partially covered' | 'not covered'; 
-    confidence: number;
-    userHas?: string;
-    comparison?: string;
-}[]> {
+): Promise<{ requirement: string; coverage: 'fully covered' | 'partially covered' | 'not covered'; confidence: number }[]> {
     if (!API_KEY) {
         throw new Error('Hugging Face API key not configured');
     }
@@ -290,29 +315,21 @@ export async function analyzeRequirementCoverage(
 
                 const labels = result.labels || [];
                 const scores = result.scores || [];
-                const coverage = (labels[0] as 'fully covered' | 'partially covered' | 'not covered') || 'not covered';
-
-                // Extract what the user has for this requirement
-                const { userHas, comparison } = extractUserMatch(resumeText, req, coverage);
 
                 results.push({
                     requirement: req,
-                    coverage,
-                    confidence: scores[0] || 0,
-                    userHas,
-                    comparison
+                    coverage: (labels[0] as 'fully covered' | 'partially covered' | 'not covered') || 'not covered',
+                    confidence: scores[0] || 0
                 });
 
                 console.log(`   ✓ "${req.substring(0, 40)}..." → ${labels[0]}`);
-                console.log(`     Comparison: ${comparison}`);
             } catch (error) {
                 console.error(`   ✗ Failed to analyze requirement: ${req}`, error);
                 // Continue with other requirements even if one fails
                 results.push({
                     requirement: req,
                     coverage: 'not covered' as const,
-                    confidence: 0,
-                    comparison: 'Unable to determine match'
+                    confidence: 0
                 });
             }
         }
@@ -325,100 +342,4 @@ export async function analyzeRequirementCoverage(
         console.error('❌ AI requirement coverage analysis failed:', error);
         throw error;
     }
-}
-
-/**
- * Extract what the user has from their resume that matches the requirement
- */
-function extractUserMatch(resumeText: string, requirement: string, coverage: string): { userHas: string; comparison: string } {
-    const lowerResume = resumeText.toLowerCase();
-    const lowerReq = requirement.toLowerCase();
-    
-    // Extract years of experience if mentioned in requirement
-    const yearsMatch = requirement.match(/(\d+)\+?\s*years?/i);
-    if (yearsMatch) {
-        const requiredYears = parseInt(yearsMatch[1]);
-        const resumeYearsMatch = resumeText.match(/(\d+)\+?\s*years?/i);
-        const userYears = resumeYearsMatch ? parseInt(resumeYearsMatch[1]) : 0;
-        
-        if (userYears > 0) {
-            const comparison = userYears >= requiredYears 
-                ? `You have ${userYears} years of experience (meets ${requiredYears}+ years requirement)`
-                : `You have ${userYears} years of experience (${requiredYears} years required)`;
-            return { userHas: `${userYears} years of experience`, comparison };
-        }
-    }
-    
-    // Extract degree/education if mentioned
-    if (lowerReq.includes('degree') || lowerReq.includes('bachelor') || lowerReq.includes('master')) {
-        const degrees = ['phd', 'ph.d', 'doctorate', 'master', 'mba', 'bachelor', 'bs', 'ba', 'ms', 'ma'];
-        const foundDegree = degrees.find(deg => lowerResume.includes(deg));
-        if (foundDegree) {
-            return {
-                userHas: `${foundDegree.toUpperCase()} degree`,
-                comparison: `You have a ${foundDegree.toUpperCase()} degree`
-            };
-        }
-    }
-    
-    // Extract specific skills or tools mentioned in requirement
-    const skills = extractSkillsFromRequirement(requirement);
-    const matchedSkills = skills.filter(skill => lowerResume.includes(skill.toLowerCase()));
-    
-    if (matchedSkills.length > 0 && skills.length > 0) {
-        const comparison = coverage === 'fully covered'
-            ? `You have experience with ${matchedSkills.join(', ')}`
-            : coverage === 'partially covered'
-            ? `You have ${matchedSkills.length} of ${skills.length} skills: ${matchedSkills.join(', ')}`
-            : `Missing: ${skills.filter(s => !matchedSkills.includes(s)).join(', ')}`;
-        
-        return { userHas: matchedSkills.join(', '), comparison };
-    }
-    
-    // Default comparison based on coverage
-    if (coverage === 'fully covered') {
-        return { userHas: 'Relevant experience found', comparison: 'Your resume demonstrates this requirement' };
-    } else if (coverage === 'partially covered') {
-        return { userHas: 'Some relevant experience', comparison: 'Partial match found in your resume' };
-    } else {
-        return { userHas: 'Not found in resume', comparison: 'This requirement is not clearly addressed in your resume' };
-    }
-}
-
-/**
- * Extract potential skills/keywords from a requirement text
- */
-function extractSkillsFromRequirement(requirement: string): string[] {
-    const skills: string[] = [];
-    
-    // Comprehensive list of technical skills and tools
-    const techTerms = [
-        // Programming languages
-        'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'ruby', 'php', 'go', 'swift', 'kotlin',
-        // Frontend frameworks
-        'react', 'angular', 'vue', 'svelte', 'next.js', 'gatsby',
-        // Backend
-        'node', 'express', 'django', 'flask', 'spring', 'rails',
-        // Design tools
-        'figma', 'sketch', 'photoshop', 'illustrator', 'adobe xd', 'invision', 'framer', 'principle', 'after effects',
-        // Design concepts
-        'ux', 'ui', 'user experience', 'user interface', 'responsive design', 'mobile design', 'web design', 'design system', 'wireframe', 'prototype',
-        // Cloud & DevOps
-        'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'terraform',
-        // Databases
-        'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'dynamodb',
-        // Tools
-        'git', 'jira', 'confluence', 'slack', 'trello', 'asana',
-        // Methodologies
-        'agile', 'scrum', 'kanban', 'waterfall', 'lean'
-    ];
-    
-    const lowerReq = requirement.toLowerCase();
-    techTerms.forEach(term => {
-        if (lowerReq.includes(term)) {
-            skills.push(term);
-        }
-    });
-    
-    return skills;
 }
