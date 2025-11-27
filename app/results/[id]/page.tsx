@@ -466,24 +466,21 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             bg: 'bg-green-50',
                                             border: 'border-green-200',
                                             text: 'text-green-800',
-                                            badge: 'bg-green-100 text-green-700',
-                                            icon: '✓'
+                                            badge: 'bg-green-100 text-green-700'
                                         };
                                     } else if (item.coverage === 'partially covered') {
                                     return {
                                             bg: 'bg-amber-50',
                                             border: 'border-amber-200',
                                             text: 'text-amber-800',
-                                            badge: 'bg-amber-100 text-amber-700',
-                                            icon: '~'
+                                            badge: 'bg-amber-100 text-amber-700'
                                     };
                                 } else {
                                     return {
                                             bg: 'bg-red-50',
                                             border: 'border-red-200',
                                             text: 'text-red-800',
-                                            badge: 'bg-red-100 text-red-700',
-                                            icon: '✗'
+                                            badge: 'bg-red-100 text-red-700'
                                     };
                                 }
                             };
@@ -502,9 +499,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                 <span className={`px-3 py-1 ${styles.badge} text-[10px] font-medium tracking-[0.08em] uppercase`}>
                                                     {item.coverage}
-                                                </span>
-                                                <span className="text-[20px] font-semibold">
-                                                    {styles.icon}
                                                 </span>
                                             </div>
                                         </div>
