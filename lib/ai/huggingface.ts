@@ -123,7 +123,7 @@ export async function batchCompareTexts(
 
 /**
  * AI-Powered Keyword Extraction using Zero-Shot Classification
- * Uses AI to intelligently identify and extract important keywords
+ * Extracts keywords from text and categorizes them intelligently
  */
 export async function extractAndCategorizeKeywords(
     jobDescriptionText: string,
@@ -138,73 +138,86 @@ export async function extractAndCategorizeKeywords(
     }
 
     try {
-        console.log('🔄 AI: Intelligently extracting keywords from job description...');
+        console.log('🔄 AI: Extracting and categorizing keywords from job description...');
 
         const model = 'facebook/bart-large-mnli';
         
-        // Step 1: Extract candidate keywords using NLP techniques
-        // Look for nouns, technical terms, and multi-word phrases
-        const sentences = jobDescriptionText.split(/[.!?\n]+/).filter(s => s.trim().length > 10);
+        // Step 1: Intelligent keyword extraction from job description
+        // Extract different types of keywords/phrases
+        const candidateKeywords = new Set<string>();
         
-        // Extract meaningful phrases (1-3 words)
-        const phrases: string[] = [];
-        sentences.forEach(sentence => {
-            const words = sentence.toLowerCase().match(/\b[a-z][a-z0-9+#.\\-]*\b/g) || [];
-            
-            // Single words (technical terms, skills)
-            words.forEach(word => {
-                if (word.length > 3 && !['your', 'will', 'must', 'should', 'have', 'with', 'that', 'this', 'from', 'able', 'work', 'team', 'role'].includes(word)) {
-                    phrases.push(word);
-                }
-            });
-            
-            // Two-word phrases
-            for (let i = 0; i < words.length - 1; i++) {
-                const phrase = `${words[i]} ${words[i + 1]}`;
-                if (words[i].length > 2 && words[i + 1].length > 2) {
-                    phrases.push(phrase);
-                }
+        // A. Extract capitalized terms (technologies, frameworks, tools)
+        // Matches: React, Python, AWS, Machine Learning, etc.
+        const capitalizedTerms = jobDescriptionText.match(/\b[A-Z][a-zA-Z]*(?:[\s.-][A-Z][a-zA-Z]*)*\b/g) || [];
+        capitalizedTerms.forEach(term => {
+            if (term.length > 2 && term.length < 30 && !/^(The|We|Our|You|Your|This|That|These|Those|Are|Is|Will|Must|Should|For|And|But|Or)$/i.test(term)) {
+                candidateKeywords.add(term);
             }
         });
         
-        // Get unique phrases, prioritize longer ones and filter generic terms
-        const uniquePhrases = [...new Set(phrases)];
-        const stopPhrases = ['years experience', 'able work', 'work with', 'team member', 'looking for'];
-        const filteredPhrases = uniquePhrases.filter(p => 
-            !stopPhrases.some(stop => p.includes(stop)) &&
-            p.split(' ').length <= 3
-        );
-        
-        // Count frequency and prioritize
-        const phraseFreq: { [key: string]: number } = {};
-        filteredPhrases.forEach(phrase => {
-            phraseFreq[phrase] = (phraseFreq[phrase] || 0) + 1;
+        // B. Extract technical terms (lowercase with special chars)
+        // Matches: javascript, node.js, python, c++, react.js, etc.
+        const technicalTerms = jobDescriptionText.match(/\b[a-z]+(?:[+#]|\.js|script|SQL|DB)?\b/gi) || [];
+        technicalTerms.forEach(term => {
+            if ((term.includes('+') || term.includes('#') || term.includes('.') || term.toLowerCase().endsWith('script') || term.toLowerCase().endsWith('sql')) && term.length > 2) {
+                candidateKeywords.add(term);
+            }
         });
         
-        // Prioritize: multi-word phrases + frequency
-        const potentialKeywords = Object.entries(phraseFreq)
-            .sort((a, b) => {
-                const aWords = a[0].split(' ').length;
-                const bWords = b[0].split(' ').length;
-                if (aWords !== bWords) return bWords - aWords; // Prefer multi-word
-                return b[1] - a[1]; // Then by frequency
-            })
-            .slice(0, 25)
-            .map(([phrase]) => phrase);
-
-        console.log('🔍 AI: Analyzing', potentialKeywords.length, 'candidate keywords');
-
-        // Step 2: Use AI to determine if each phrase is important AND categorize it
-        const categories = ['important technical skill or tool', 'important soft skill or ability', 'not important'];
+        // C. Extract from bullet points (often contain key requirements)
+        const bulletPoints = jobDescriptionText.match(/[-•*]\s*([^\n.]+)/g) || [];
+        bulletPoints.forEach(point => {
+            // Extract noun phrases and important words
+            const cleanPoint = point.replace(/[-•*]\s*/, '');
+            const words = cleanPoint.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
+            words.forEach(phrase => {
+                if (phrase.length > 3 && phrase.length < 30) {
+                    candidateKeywords.add(phrase);
+                }
+            });
+            
+            // Also extract strong keywords (min 4 chars, appears significant)
+            const strongWords = cleanPoint.match(/\b[a-z]{4,15}\b/gi) || [];
+            strongWords.forEach(word => {
+                if (!/^(with|have|must|should|will|able|good|strong|experience|years?|work|team|role|person|candidate)$/i.test(word)) {
+                    candidateKeywords.add(word);
+                }
+            });
+        });
         
+        // Get unique keywords, prioritize multi-word terms
+        const potentialKeywords = Array.from(candidateKeywords)
+            .filter(kw => kw.length >= 3 && kw.length < 30)
+            .sort((a, b) => {
+                // Prioritize: multi-word > special chars > longer words
+                const aWords = a.split(/\s+/).length;
+                const bWords = b.split(/\s+/).length;
+                if (aWords !== bWords) return bWords - aWords;
+                
+                const aSpecial = /[+#.]/.test(a);
+                const bSpecial = /[+#.]/.test(b);
+                if (aSpecial !== bSpecial) return bSpecial ? 1 : -1;
+                
+                return b.length - a.length;
+            })
+            .slice(0, 30);
+
+        console.log('🔍 AI: Analyzing', potentialKeywords.length, 'extracted terms');
+
+        // Step 2: Use AI to determine if each term is important and categorize it
         const categorizedResults = await Promise.all(
-            potentialKeywords.map(async (keyword) => {
+            potentialKeywords.slice(0, 25).map(async (keyword) => {
                 try {
+                    // Ask AI to classify the keyword
                     const result = await hf.zeroShotClassification({
                         model,
-                        inputs: `In a job description, is "${keyword}" an important requirement? Context: technical skills include programming languages, tools, frameworks. Soft skills include communication, leadership, teamwork.`,
+                        inputs: `"${keyword}" is a`,
                         parameters: {
-                            candidate_labels: categories,
+                            candidate_labels: [
+                                'technical skill or technology',
+                                'soft skill or ability',
+                                'job requirement or qualification'
+                            ],
                         },
                     }) as any;
 
@@ -212,16 +225,17 @@ export async function extractAndCategorizeKeywords(
                     const scores = result.scores || [];
                     const topCategory = labels[0];
                     const confidence = scores[0];
-
-                    // Only keep if AI thinks it's important
-                    if (topCategory === 'not important') {
+                    
+                    // Only keep if AI is reasonably confident
+                    if (confidence < 0.35) {
                         return null;
                     }
 
-                    // Check if keyword exists in resume (flexible matching)
+                    // Check if keyword exists in resume (whole word match)
                     const resumeLower = resumeText.toLowerCase();
                     const keywordLower = keyword.toLowerCase();
-                    const inResume = resumeLower.includes(keywordLower);
+                    const keywordRegex = new RegExp(`\\b${keywordLower.replace(/[+#.]/g, '\\$&')}\\b`, 'i');
+                    const inResume = keywordRegex.test(resumeLower);
 
                     return {
                         keyword,
@@ -236,11 +250,11 @@ export async function extractAndCategorizeKeywords(
             })
         );
 
-        // Filter out nulls and categorize
+        // Filter out nulls and low-confidence results
         const validResults = categorizedResults.filter(r => r !== null);
 
         const technicalSkills = validResults
-            .filter(r => r!.category === 'important technical skill or tool')
+            .filter(r => r!.category === 'technical skill or technology')
             .map(r => ({
                 keyword: r!.keyword,
                 inResume: r!.inResume,
@@ -248,20 +262,25 @@ export async function extractAndCategorizeKeywords(
             }));
 
         const abilities = validResults
-            .filter(r => r!.category === 'important soft skill or ability')
+            .filter(r => r!.category === 'soft skill or ability')
             .map(r => ({
                 keyword: r!.keyword,
                 inResume: r!.inResume,
                 confidence: r!.confidence
             }));
 
-        // Significant keywords (ones marked as important but not clearly technical or soft skills)
-        const significantKeywords: { keyword: string; inResume: boolean; confidence: number }[] = [];
+        const significantKeywords = validResults
+            .filter(r => r!.category === 'job requirement or qualification')
+            .map(r => ({
+                keyword: r!.keyword,
+                inResume: r!.inResume,
+                confidence: r!.confidence
+            }));
 
-        console.log('✅ AI: Intelligent extraction complete!');
+        console.log('✅ AI: Categorization complete!');
         console.log(`   - Technical Skills: ${technicalSkills.length}`);
         console.log(`   - Abilities: ${abilities.length}`);
-        console.log(`   - Context Keywords: ${significantKeywords.length}`);
+        console.log(`   - Significant Keywords: ${significantKeywords.length}`);
 
         return {
             technicalSkills,
