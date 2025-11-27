@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
     CloudUploadOutlined, 
     ArrowRightOutlined, 
@@ -22,6 +22,25 @@ export default function HomePage() {
     const [dragActive, setDragActive] = useState(false);
     const [progress, setProgress] = useState(0);
     const [progressStatus, setProgressStatus] = useState('');
+    const [dots, setDots] = useState('');
+
+    // Animated dots effect
+    useEffect(() => {
+        if (!loading) {
+            setDots('');
+            return;
+        }
+        
+        setDots('.');
+        const interval = setInterval(() => {
+            setDots(prev => {
+                if (prev === '...') return '.';
+                return prev + '.';
+            });
+        }, 500);
+        
+        return () => clearInterval(interval);
+    }, [loading]);
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
@@ -662,7 +681,7 @@ export default function HomePage() {
                                 Analyzing Resume
                             </h3>
                             <p className="text-[13px] text-neutral-500 mt-1 tracking-[-0.01em]">
-                                {progressStatus}
+                                {progressStatus.replace(/\.+$/, '')}<span className="inline-block w-6 text-left">{dots}</span>
                             </p>
                         </div>
 
@@ -692,20 +711,38 @@ export default function HomePage() {
                         <div className="border-t border-neutral-100 px-8 py-6">
                             <div className="space-y-3">
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 ${progress > 0 ? 'bg-black' : 'bg-neutral-200'}`} />
-                                    <span className={`text-[13px] tracking-[-0.01em] ${progress > 0 ? 'text-black' : 'text-neutral-400'}`}>
+                                    {progress > 0 && progress < 40 ? (
+                                        <div className="relative w-4 h-4">
+                                            <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className={`w-2 h-2 ${progress >= 40 ? 'bg-black' : 'bg-neutral-200'}`} />
+                                    )}
+                                    <span className={`text-[13px] tracking-[-0.01em] ${progress > 0 ? 'text-black font-medium' : 'text-neutral-400'}`}>
                                         Parsing resume
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 ${progress >= 40 ? 'bg-black' : 'bg-neutral-200'}`} />
-                                    <span className={`text-[13px] tracking-[-0.01em] ${progress >= 40 ? 'text-black' : 'text-neutral-400'}`}>
+                                    {progress >= 40 && progress < 85 ? (
+                                        <div className="relative w-4 h-4">
+                                            <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className={`w-2 h-2 ${progress >= 40 ? 'bg-black' : 'bg-neutral-200'}`} />
+                                    )}
+                                    <span className={`text-[13px] tracking-[-0.01em] ${progress >= 40 ? 'text-black font-medium' : 'text-neutral-400'}`}>
                                         AI analysis
                                     </span>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 ${progress >= 85 ? 'bg-black' : 'bg-neutral-200'}`} />
-                                    <span className={`text-[13px] tracking-[-0.01em] ${progress >= 85 ? 'text-black' : 'text-neutral-400'}`}>
+                                    {progress >= 85 && progress < 100 ? (
+                                        <div className="relative w-4 h-4">
+                                            <div className="absolute inset-0 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className={`w-2 h-2 ${progress >= 85 ? 'bg-black' : 'bg-neutral-200'}`} />
+                                    )}
+                                    <span className={`text-[13px] tracking-[-0.01em] ${progress >= 85 ? 'text-black font-medium' : 'text-neutral-400'}`}>
                                         Generating insights
                                     </span>
                                 </div>
