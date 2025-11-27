@@ -446,80 +446,149 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                     </div>
                 )}
 
-                {/* Per-Requirement Coverage */}
-                {analysis.requirementCoverage && analysis.requirementCoverage.length > 0 && (
-                    <div className="mb-32">
-                        <div className="mb-12">
-                            <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
-                                Requirement Analysis
-                            </h2>
-                            <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
-                                AI evaluation of how well you match each specific requirement
-                            </p>
-                </div>
+                {/* Per-Requirement Coverage - Actionable */}
+                {analysis.requirementCoverage && analysis.requirementCoverage.length > 0 && (() => {
+                    const notCovered = analysis.requirementCoverage.filter(r => r.coverage === 'not covered');
+                    const partiallyCovered = analysis.requirementCoverage.filter(r => r.coverage === 'partially covered');
+                    const fullyCovered = analysis.requirementCoverage.filter(r => r.coverage === 'fully covered');
+                    const totalReqs = analysis.requirementCoverage.length;
+                    const coverageRate = Math.round((fullyCovered.length / totalReqs) * 100);
+                    
+                    return (
+                        <div className="mb-32">
+                            <div className="mb-12">
+                                <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
+                                    Requirement Gap Analysis
+                                </h2>
+                                <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
+                                    Focus on what needs attention to strengthen your application
+                                </p>
+                            </div>
 
-                        <div className="space-y-4">
-                            {analysis.requirementCoverage.map((item, index) => {
-                                const getCoverageStyle = () => {
-                                    if (item.coverage === 'fully covered') {
-                                    return {
-                                            bg: 'bg-green-50',
-                                            border: 'border-green-200',
-                                            text: 'text-green-800',
-                                            badge: 'bg-green-100 text-green-700'
-                                        };
-                                    } else if (item.coverage === 'partially covered') {
-                                    return {
-                                            bg: 'bg-amber-50',
-                                            border: 'border-amber-200',
-                                            text: 'text-amber-800',
-                                            badge: 'bg-amber-100 text-amber-700'
-                                    };
-                                } else {
-                                    return {
-                                            bg: 'bg-red-50',
-                                            border: 'border-red-200',
-                                            text: 'text-red-800',
-                                            badge: 'bg-red-100 text-red-700'
-                                    };
-                                }
-                            };
-
-                                const styles = getCoverageStyle();
-
-                            return (
-                                    <div
-                                        key={index}
-                                        className={`border ${styles.border} ${styles.bg} p-6 hover:border-black transition-colors`}
-                                    >
-                                    <div className="flex items-start justify-between gap-4 mb-4">
-                                            <p className={`text-[15px] ${styles.text} tracking-[-0.01em] leading-[1.6] flex-1 font-medium`}>
-                                                {item.requirement}
-                                            </p>
-                                            <div className="flex items-center gap-3 flex-shrink-0">
-                                                <span className={`px-3 py-1 ${styles.badge} text-[10px] font-medium tracking-[0.08em] uppercase`}>
-                                                    {item.coverage}
-                                        </span>
+                            {/* Summary Stats */}
+                            <div className="grid grid-cols-3 gap-4 mb-12">
+                                <div className="border-2 border-black p-6 text-center">
+                                    <div className="text-[48px] font-semibold tracking-tight leading-none mb-2">
+                                        {fullyCovered.length}
                                     </div>
-                                        </div>
-                                        <div className="mt-3 pt-3 border-t border-neutral-200">
-                                            <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
-                                                <span className="font-semibold">Your Profile: </span>
-                                                {item.comparison || (
-                                                    item.coverage === 'fully covered' 
-                                                        ? 'Your resume demonstrates this requirement' 
-                                                        : item.coverage === 'partially covered'
-                                                        ? 'Partial match found in your resume'
-                                                        : 'This requirement is not clearly addressed in your resume'
-                                                )}
-                                            </p>
-                                        </div>
+                                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
+                                        Requirements Met
+                                    </div>
                                 </div>
-                            );
-                        })}
+                                <div className="border border-neutral-200 p-6 text-center">
+                                    <div className="text-[48px] font-semibold tracking-tight leading-none mb-2 text-amber-600">
+                                        {partiallyCovered.length}
+                                    </div>
+                                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
+                                        Need Strengthening
+                                    </div>
+                                </div>
+                                <div className="border border-neutral-200 p-6 text-center">
+                                    <div className="text-[48px] font-semibold tracking-tight leading-none mb-2 text-red-600">
+                                        {notCovered.length}
+                                    </div>
+                                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
+                                        Critical Gaps
+                                    </div>
                     </div>
                 </div>
-                )}
+
+                            {/* Action Needed: Not Covered */}
+                            {notCovered.length > 0 && (
+                                <div className="mb-12">
+                                    <div className="mb-6">
+                                        <h3 className="text-[20px] font-semibold tracking-[-0.01em] mb-2 flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-red-600" />
+                                            Critical Gaps ({notCovered.length})
+                                        </h3>
+                                        <p className="text-[13px] text-neutral-600 tracking-[-0.01em]">
+                                            These requirements are missing from your resume. Address these first.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {notCovered.map((item, idx) => (
+                                            <div key={idx} className="border-l-4 border-red-600 bg-red-50 p-6">
+                                                <div className="flex items-start justify-between gap-4 mb-4">
+                                                    <p className="text-[15px] text-neutral-900 tracking-[-0.01em] leading-[1.6] flex-1 font-medium">
+                                                        {item.requirement}
+                                                    </p>
+                                                    <span className="text-[11px] text-neutral-500 font-mono flex-shrink-0">
+                                                        {Math.round(item.confidence * 100)}% confidence
+                        </span>
+                    </div>
+                                                <div className="bg-white border border-red-200 p-4 mt-3">
+                                                    <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
+                                                        <span className="font-semibold text-red-700">Action: </span>
+                                                        Add specific examples, projects, or experiences that demonstrate this requirement. Use relevant keywords naturally in your resume.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Strengthen: Partially Covered */}
+                            {partiallyCovered.length > 0 && (
+                                <div className="mb-12">
+                                    <div className="mb-6">
+                                        <h3 className="text-[20px] font-semibold tracking-[-0.01em] mb-2 flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-amber-600" />
+                                            Strengthen These ({partiallyCovered.length})
+                                        </h3>
+                                        <p className="text-[13px] text-neutral-600 tracking-[-0.01em]">
+                                            You have some relevant experience. Make it more prominent and explicit.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {partiallyCovered.map((item, idx) => (
+                                            <div key={idx} className="border-l-4 border-amber-600 bg-amber-50 p-6">
+                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                                    <p className="text-[15px] text-neutral-900 tracking-[-0.01em] leading-[1.6] flex-1">
+                                                        {item.requirement}
+                                                    </p>
+                                                    <span className="text-[11px] text-neutral-500 font-mono flex-shrink-0">
+                                                        {Math.round(item.confidence * 100)}% confidence
+                                        </span>
+                                                </div>
+                                                <div className="bg-white border border-amber-200 p-4 mt-3">
+                                                    <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
+                                                        <span className="font-semibold text-amber-700">Improve: </span>
+                                                        Expand on related experience with quantifiable achievements. Use stronger action verbs and industry-specific terminology.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Good: Fully Covered */}
+                            {fullyCovered.length > 0 && (
+                                <div>
+                                    <div className="mb-6">
+                                        <h3 className="text-[20px] font-semibold tracking-[-0.01em] mb-2 flex items-center gap-2">
+                                            <span className="w-2 h-2 bg-green-600" />
+                                            Strong Matches ({fullyCovered.length})
+                                        </h3>
+                                        <p className="text-[13px] text-neutral-600 tracking-[-0.01em]">
+                                            These requirements are well-addressed in your resume. Keep them prominent.
+                                        </p>
+                                    </div>
+                                    <div className="grid sm:grid-cols-2 gap-3">
+                                        {fullyCovered.map((item, idx) => (
+                                            <div key={idx} className="border border-green-200 bg-green-50 p-4">
+                                                <p className="text-[13px] text-neutral-900 tracking-[-0.01em] leading-[1.6]">
+                                                    {item.requirement}
+                                                </p>
+                                            </div>
+                                        ))}
+                    </div>
+                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 {/* Keyword Categorization */}
                 {analysis.categorizedKeywords && (
