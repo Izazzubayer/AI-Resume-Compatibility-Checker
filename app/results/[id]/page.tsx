@@ -492,27 +492,24 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                         key={index}
                                         className={`border ${styles.border} ${styles.bg} p-6 hover:border-black transition-colors`}
                                     >
-                                        <div className="flex items-start justify-between gap-4 mb-3">
-                                            <p className={`text-[15px] ${styles.text} tracking-[-0.01em] leading-[1.6] flex-1`}>
+                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                            <p className={`text-[15px] ${styles.text} tracking-[-0.01em] leading-[1.6] flex-1 font-medium`}>
                                                 {item.requirement}
                                             </p>
                                             <div className="flex items-center gap-3 flex-shrink-0">
                                                 <span className={`px-3 py-1 ${styles.badge} text-[10px] font-medium tracking-[0.08em] uppercase`}>
                                                     {item.coverage}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex-1 h-1 bg-neutral-200 relative">
-                                                <div
-                                                    className="absolute left-0 top-0 h-full bg-black"
-                                                    style={{ width: `${item.confidence * 100}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-[11px] text-neutral-500 font-mono">
-                                                {Math.round(item.confidence * 100)}%
                                         </span>
                                     </div>
+                                        </div>
+                                        {item.comparison && (
+                                            <div className="mt-3 pt-3 border-t border-neutral-200">
+                                                <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
+                                                    <span className="font-semibold">Your Profile: </span>
+                                                    {item.comparison}
+                                                </p>
+                                            </div>
+                                        )}
                                 </div>
                             );
                         })}

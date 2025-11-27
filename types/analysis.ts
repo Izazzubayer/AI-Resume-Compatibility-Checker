@@ -13,6 +13,8 @@ export interface RequirementCoverage {
     requirement: string;
     coverage: 'fully covered' | 'partially covered' | 'not covered';
     confidence: number;
+    userHas?: string; // What the user actually has based on resume
+    comparison?: string; // AI-generated comparison text
 }
 
 export interface AnalysisResult {

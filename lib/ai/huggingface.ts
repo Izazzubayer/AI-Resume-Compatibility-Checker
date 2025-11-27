@@ -250,7 +250,13 @@ export async function extractAndCategorizeKeywords(
 export async function analyzeRequirementCoverage(
     resumeText: string,
     requirements: string[]
-): Promise<{ requirement: string; coverage: 'fully covered' | 'partially covered' | 'not covered'; confidence: number }[]> {
+): Promise<{ 
+    requirement: string; 
+    coverage: 'fully covered' | 'partially covered' | 'not covered'; 
+    confidence: number;
+    userHas?: string;
+    comparison?: string;
+}[]> {
     if (!API_KEY) {
         throw new Error('Hugging Face API key not configured');
     }
@@ -284,11 +290,17 @@ export async function analyzeRequirementCoverage(
 
                 const labels = result.labels || [];
                 const scores = result.scores || [];
+                const coverage = (labels[0] as 'fully covered' | 'partially covered' | 'not covered') || 'not covered';
+
+                // Extract what the user has for this requirement
+                const { userHas, comparison } = extractUserMatch(resumeText, req, coverage);
 
                 results.push({
                     requirement: req,
-                    coverage: (labels[0] as 'fully covered' | 'partially covered' | 'not covered') || 'not covered',
-                    confidence: scores[0] || 0
+                    coverage,
+                    confidence: scores[0] || 0,
+                    userHas,
+                    comparison
                 });
 
                 console.log(`   ✓ "${req.substring(0, 40)}..." → ${labels[0]}`);
@@ -298,7 +310,8 @@ export async function analyzeRequirementCoverage(
                 results.push({
                     requirement: req,
                     coverage: 'not covered' as const,
-                    confidence: 0
+                    confidence: 0,
+                    comparison: 'Unable to determine match'
                 });
             }
         }
@@ -311,4 +324,81 @@ export async function analyzeRequirementCoverage(
         console.error('❌ AI requirement coverage analysis failed:', error);
         throw error;
     }
+}
+
+/**
+ * Extract what the user has from their resume that matches the requirement
+ */
+function extractUserMatch(resumeText: string, requirement: string, coverage: string): { userHas: string; comparison: string } {
+    const lowerResume = resumeText.toLowerCase();
+    const lowerReq = requirement.toLowerCase();
+    
+    // Extract years of experience if mentioned in requirement
+    const yearsMatch = requirement.match(/(\d+)\+?\s*years?/i);
+    if (yearsMatch) {
+        const requiredYears = parseInt(yearsMatch[1]);
+        const resumeYearsMatch = resumeText.match(/(\d+)\+?\s*years?/i);
+        const userYears = resumeYearsMatch ? parseInt(resumeYearsMatch[1]) : 0;
+        
+        if (userYears > 0) {
+            const comparison = userYears >= requiredYears 
+                ? `You have ${userYears} years of experience (meets ${requiredYears}+ years requirement)`
+                : `You have ${userYears} years of experience (${requiredYears} years required)`;
+            return { userHas: `${userYears} years of experience`, comparison };
+        }
+    }
+    
+    // Extract degree/education if mentioned
+    if (lowerReq.includes('degree') || lowerReq.includes('bachelor') || lowerReq.includes('master')) {
+        const degrees = ['phd', 'ph.d', 'doctorate', 'master', 'mba', 'bachelor', 'bs', 'ba', 'ms', 'ma'];
+        const foundDegree = degrees.find(deg => lowerResume.includes(deg));
+        if (foundDegree) {
+            return {
+                userHas: `${foundDegree.toUpperCase()} degree`,
+                comparison: `You have a ${foundDegree.toUpperCase()} degree`
+            };
+        }
+    }
+    
+    // Extract specific skills or tools mentioned in requirement
+    const skills = extractSkillsFromRequirement(requirement);
+    const matchedSkills = skills.filter(skill => lowerResume.includes(skill.toLowerCase()));
+    
+    if (matchedSkills.length > 0 && skills.length > 0) {
+        const comparison = coverage === 'fully covered'
+            ? `You have experience with ${matchedSkills.join(', ')}`
+            : coverage === 'partially covered'
+            ? `You have ${matchedSkills.length} of ${skills.length} skills: ${matchedSkills.join(', ')}`
+            : `Missing: ${skills.filter(s => !matchedSkills.includes(s)).join(', ')}`;
+        
+        return { userHas: matchedSkills.join(', '), comparison };
+    }
+    
+    // Default comparison based on coverage
+    if (coverage === 'fully covered') {
+        return { userHas: 'Relevant experience found', comparison: 'Your resume demonstrates this requirement' };
+    } else if (coverage === 'partially covered') {
+        return { userHas: 'Some relevant experience', comparison: 'Partial match found in your resume' };
+    } else {
+        return { userHas: 'Not found in resume', comparison: 'This requirement is not clearly addressed in your resume' };
+    }
+}
+
+/**
+ * Extract potential skills/keywords from a requirement text
+ */
+function extractSkillsFromRequirement(requirement: string): string[] {
+    const skills: string[] = [];
+    
+    // Common technical skills and tools
+    const techTerms = ['javascript', 'python', 'react', 'node', 'aws', 'docker', 'kubernetes', 'sql', 'java', 'c++', 'typescript', 'angular', 'vue', 'figma', 'sketch', 'photoshop', 'illustrator', 'ux', 'ui', 'agile', 'scrum', 'jira', 'git'];
+    
+    const lowerReq = requirement.toLowerCase();
+    techTerms.forEach(term => {
+        if (lowerReq.includes(term)) {
+            skills.push(term);
+        }
+    });
+    
+    return skills;
 }
