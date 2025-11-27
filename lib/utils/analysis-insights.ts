@@ -46,6 +46,12 @@ export interface ResumeHealth {
     issues: number;
     strengths: number;
     message: string;
+    breakdown: {
+        metric: string;
+        score: number;
+        detail: string;
+        status: 'good' | 'fair' | 'poor';
+    }[];
 }
 
 export interface SkillGap {
@@ -346,34 +352,83 @@ export function calculateApplicationConfidence(analysis: AnalysisResult): Confid
  * Calculate resume health score
  */
 export function calculateResumeHealth(analysis: AnalysisResult): ResumeHealth {
-    const { categoryScores, atsCompatibility } = analysis;
-    const score = categoryScores.ats;
+    const { categoryScores, atsCompatibility, skillsAnalysis, matchedKeywords, missingKeywords, meta } = analysis;
+    
+    // Calculate individual component scores
+    const contentScore = categoryScores.skills; // How well skills match
+    const keywordScore = categoryScores.keywords; // Keyword alignment
+    const atsScore = categoryScores.ats; // Formatting quality
+    const semanticScore = meta.similarityUsed ? (meta.similarityScore || 0) * 100 : contentScore; // AI similarity or fallback
+    
+    // Overall health is weighted average
+    const overallScore = Math.round(
+        (contentScore * 0.35) + 
+        (keywordScore * 0.30) + 
+        (atsScore * 0.20) + 
+        (semanticScore * 0.15)
+    );
     
     let grade: string;
-    if (score >= 90) grade = 'A';
-    else if (score >= 80) grade = 'B';
-    else if (score >= 70) grade = 'C';
-    else if (score >= 60) grade = 'D';
+    if (overallScore >= 90) grade = 'A';
+    else if (overallScore >= 80) grade = 'B';
+    else if (overallScore >= 70) grade = 'C';
+    else if (overallScore >= 60) grade = 'D';
     else grade = 'F';
+    
+    // Calculate specific metrics
+    const totalKeywords = matchedKeywords.length + missingKeywords.length;
+    const keywordMatchRate = totalKeywords > 0 ? Math.round((matchedKeywords.length / totalKeywords) * 100) : 0;
+    
+    const totalSkills = skillsAnalysis.matched.length + skillsAnalysis.missing.length;
+    const skillMatchRate = totalSkills > 0 ? Math.round((skillsAnalysis.matched.length / totalSkills) * 100) : 0;
     
     const issues = atsCompatibility.issues.length;
     const strengths = atsCompatibility.passedChecks.length;
     
+    // Generate health breakdown
+    const breakdown = [
+        {
+            metric: 'Content Strength',
+            score: contentScore,
+            detail: `${skillsAnalysis.matched.length}/${totalSkills} skills matched`,
+            status: contentScore >= 70 ? 'good' : contentScore >= 50 ? 'fair' : 'poor'
+        },
+        {
+            metric: 'Keyword Alignment',
+            score: keywordScore,
+            detail: `${matchedKeywords.length}/${totalKeywords} keywords present`,
+            status: keywordScore >= 70 ? 'good' : keywordScore >= 50 ? 'fair' : 'poor'
+        },
+        {
+            metric: 'ATS Readability',
+            score: atsScore,
+            detail: `${strengths} checks passed, ${issues} issues`,
+            status: atsScore >= 80 ? 'good' : atsScore >= 60 ? 'fair' : 'poor'
+        },
+        {
+            metric: 'Semantic Relevance',
+            score: Math.round(semanticScore),
+            detail: meta.similarityUsed ? `AI similarity: ${Math.round(semanticScore)}%` : 'Based on keyword match',
+            status: semanticScore >= 70 ? 'good' : semanticScore >= 50 ? 'fair' : 'poor'
+        }
+    ];
+    
     let message: string;
-    if (score >= 80) {
-        message = 'Excellent formatting. Your resume is highly optimized for ATS systems.';
-    } else if (score >= 70) {
-        message = 'Good formatting with minor issues. Your resume should pass most ATS systems.';
+    if (overallScore >= 80) {
+        message = 'Strong resume quality. Your content is well-aligned with the job requirements.';
+    } else if (overallScore >= 65) {
+        message = 'Good foundation, but there\'s room for improvement in key areas.';
     } else {
-        message = 'Formatting issues detected. Your resume may not pass ATS screening.';
+        message = 'Significant gaps detected. Focus on strengthening content and alignment.';
     }
     
     return {
-        score,
+        score: overallScore,
         grade,
         issues,
         strengths,
-        message
+        message,
+        breakdown
     };
 }
 

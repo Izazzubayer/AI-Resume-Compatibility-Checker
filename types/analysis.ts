@@ -15,16 +15,6 @@ export interface RequirementCoverage {
     confidence: number;
 }
 
-export interface ResumeStructure {
-    sections: { name: string; content: string; wordCount: number; bulletPoints: number }[];
-    skills: string[];
-    experience: { title: string; company: string; duration: string }[];
-    education: { degree: string; institution: string; year: string }[];
-    totalWords: number;
-    sentenceCount: number;
-    avgWordsPerSentence: number;
-}
-
 export interface AnalysisResult {
     id: string;
     overallScore: number;
@@ -38,7 +28,6 @@ export interface AnalysisResult {
     skillsAnalysis: SkillAnalysis;
     atsCompatibility: ATSAnalysis;
     requirementCoverage?: RequirementCoverage[];
-    resumeStructure?: ResumeStructure;
     meta: AnalysisMeta;
     createdAt: Date;
 }
