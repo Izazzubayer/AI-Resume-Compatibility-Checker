@@ -304,8 +304,8 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
                     <div className="space-y-6">
                         {matchStrength.map((dimension, idx) => (
-                            <div key={idx}>
-                                <div className="flex items-center justify-between mb-2">
+                            <div key={idx} className="border border-neutral-200 p-6">
+                                <div className="flex items-center justify-between mb-3">
                                     <span className="text-[15px] font-medium tracking-[-0.01em]">{dimension.name}</span>
                                     <div className="flex items-center gap-3">
                                         <span className="text-[10px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
@@ -314,6 +314,9 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                         <span className="text-[20px] font-semibold tabular-nums">{dimension.score}%</span>
                                     </div>
                                 </div>
+                                <p className="text-[13px] text-neutral-600 leading-[1.6] tracking-[-0.01em] mb-4">
+                                    {dimension.description}
+                                </p>
                                 <div className="h-2 bg-neutral-100 relative">
                                     <div 
                                         className="absolute left-0 top-0 h-full bg-black transition-all duration-1000"

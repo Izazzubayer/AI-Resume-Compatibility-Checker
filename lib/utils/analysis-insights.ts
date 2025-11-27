@@ -24,6 +24,7 @@ export interface MatchStrength {
     name: string;
     score: number;
     label: string;
+    description: string;
 }
 
 export interface ImprovementPotential {
@@ -214,27 +215,32 @@ export function calculateMatchStrength(analysis: AnalysisResult): MatchStrength[
         {
             name: 'Technical Skills',
             score: categoryScores.skills,
-            label: getLabel(categoryScores.skills)
+            label: getLabel(categoryScores.skills),
+            description: 'How well your technical skills match the required skills for this role'
         },
         {
             name: 'Requirements Met',
             score: Math.round(requirementScore),
-            label: getLabel(requirementScore)
+            label: getLabel(requirementScore),
+            description: 'Percentage of job requirements covered by your resume based on AI analysis'
         },
         {
             name: 'Semantic Fit',
             score: meta.similarityScore || 0,
-            label: getLabel(meta.similarityScore || 0)
+            label: getLabel(meta.similarityScore || 0),
+            description: 'AI-measured similarity between your resume content and the job description'
         },
         {
             name: 'Experience Level',
             score: categoryScores.experience,
-            label: getLabel(categoryScores.experience)
+            label: getLabel(categoryScores.experience),
+            description: 'How your years of experience align with the seniority level of this position'
         },
         {
             name: 'ATS Compatibility',
             score: categoryScores.ats,
-            label: getLabel(categoryScores.ats)
+            label: getLabel(categoryScores.ats),
+            description: 'How likely your resume is to pass Applicant Tracking System screening'
         }
     ];
 }
