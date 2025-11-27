@@ -502,14 +502,18 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                         </span>
                                     </div>
                                         </div>
-                                        {item.comparison && (
-                                            <div className="mt-3 pt-3 border-t border-neutral-200">
-                                                <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
-                                                    <span className="font-semibold">Your Profile: </span>
-                                                    {item.comparison}
-                                                </p>
-                                            </div>
-                                        )}
+                                        <div className="mt-3 pt-3 border-t border-neutral-200">
+                                            <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
+                                                <span className="font-semibold">Your Profile: </span>
+                                                {item.comparison || (
+                                                    item.coverage === 'fully covered' 
+                                                        ? 'Your resume demonstrates this requirement' 
+                                                        : item.coverage === 'partially covered'
+                                                        ? 'Partial match found in your resume'
+                                                        : 'This requirement is not clearly addressed in your resume'
+                                                )}
+                                            </p>
+                                        </div>
                                 </div>
                             );
                         })}

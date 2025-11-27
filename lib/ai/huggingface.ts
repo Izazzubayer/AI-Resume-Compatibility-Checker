@@ -304,6 +304,7 @@ export async function analyzeRequirementCoverage(
                 });
 
                 console.log(`   ✓ "${req.substring(0, 40)}..." → ${labels[0]}`);
+                console.log(`     Comparison: ${comparison}`);
             } catch (error) {
                 console.error(`   ✗ Failed to analyze requirement: ${req}`, error);
                 // Continue with other requirements even if one fails
@@ -390,8 +391,27 @@ function extractUserMatch(resumeText: string, requirement: string, coverage: str
 function extractSkillsFromRequirement(requirement: string): string[] {
     const skills: string[] = [];
     
-    // Common technical skills and tools
-    const techTerms = ['javascript', 'python', 'react', 'node', 'aws', 'docker', 'kubernetes', 'sql', 'java', 'c++', 'typescript', 'angular', 'vue', 'figma', 'sketch', 'photoshop', 'illustrator', 'ux', 'ui', 'agile', 'scrum', 'jira', 'git'];
+    // Comprehensive list of technical skills and tools
+    const techTerms = [
+        // Programming languages
+        'javascript', 'python', 'java', 'c++', 'c#', 'typescript', 'ruby', 'php', 'go', 'swift', 'kotlin',
+        // Frontend frameworks
+        'react', 'angular', 'vue', 'svelte', 'next.js', 'gatsby',
+        // Backend
+        'node', 'express', 'django', 'flask', 'spring', 'rails',
+        // Design tools
+        'figma', 'sketch', 'photoshop', 'illustrator', 'adobe xd', 'invision', 'framer', 'principle', 'after effects',
+        // Design concepts
+        'ux', 'ui', 'user experience', 'user interface', 'responsive design', 'mobile design', 'web design', 'design system', 'wireframe', 'prototype',
+        // Cloud & DevOps
+        'aws', 'azure', 'gcp', 'docker', 'kubernetes', 'jenkins', 'terraform',
+        // Databases
+        'sql', 'mysql', 'postgresql', 'mongodb', 'redis', 'dynamodb',
+        // Tools
+        'git', 'jira', 'confluence', 'slack', 'trello', 'asana',
+        // Methodologies
+        'agile', 'scrum', 'kanban', 'waterfall', 'lean'
+    ];
     
     const lowerReq = requirement.toLowerCase();
     techTerms.forEach(term => {
