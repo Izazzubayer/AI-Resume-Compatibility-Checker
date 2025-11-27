@@ -583,75 +583,102 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                 })()}
 
                 {/* Keyword Gap Analysis - Table Format */}
-                {analysis.categorizedKeywords && (() => {
+                {(() => {
                     // Build comprehensive keyword list
                     const keywords: Array<{keyword: string; category: string; priority: number; inResume: boolean; inJD: boolean; action: string}> = [];
                     
-                    // Technical Skills (Priority 1 - Critical)
-                    analysis.categorizedKeywords.technicalSkills.missing.forEach(kw => {
-                        keywords.push({
-                            keyword: kw,
-                            category: 'Technical Skill',
-                            priority: 1,
-                            inResume: false,
-                            inJD: true,
-                            action: 'Add this skill with specific examples or certifications'
+                    // Use AI categorized keywords if available
+                    if (analysis.categorizedKeywords) {
+                        // Technical Skills (Priority 1 - Critical)
+                        (analysis.categorizedKeywords.technicalSkills?.missing || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Technical',
+                                priority: 1,
+                                inResume: false,
+                                inJD: true,
+                                action: 'Add with specific examples'
+                            });
                         });
-                    });
-                    analysis.categorizedKeywords.technicalSkills.matched.forEach(kw => {
-                        keywords.push({
-                            keyword: kw,
-                            category: 'Technical Skill',
-                            priority: 1,
-                            inResume: true,
-                            inJD: true,
-                            action: 'Keep prominent - already well-positioned'
+                        (analysis.categorizedKeywords.technicalSkills?.matched || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Technical',
+                                priority: 1,
+                                inResume: true,
+                                inJD: true,
+                                action: 'Keep prominent'
+                            });
                         });
-                    });
+                        
+                        // Abilities (Priority 2 - Important)
+                        (analysis.categorizedKeywords.abilities?.missing || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Ability',
+                                priority: 2,
+                                inResume: false,
+                                inJD: true,
+                                action: 'Demonstrate through examples'
+                            });
+                        });
+                        (analysis.categorizedKeywords.abilities?.matched || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Ability',
+                                priority: 2,
+                                inResume: true,
+                                inJD: true,
+                                action: 'Strengthen with results'
+                            });
+                        });
+                        
+                        // Contextual Keywords (Priority 3 - Supporting)
+                        (analysis.categorizedKeywords.significantKeywords?.missing || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Context',
+                                priority: 3,
+                                inResume: false,
+                                inJD: true,
+                                action: 'Include in descriptions'
+                            });
+                        });
+                        (analysis.categorizedKeywords.significantKeywords?.matched || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Context',
+                                priority: 3,
+                                inResume: true,
+                                inJD: true,
+                                action: 'Good alignment'
+                            });
+                        });
+                    }
                     
-                    // Abilities (Priority 2 - Important)
-                    analysis.categorizedKeywords.abilities.missing.forEach(kw => {
-                        keywords.push({
-                            keyword: kw,
-                            category: 'Ability',
-                            priority: 2,
-                            inResume: false,
-                            inJD: true,
-                            action: 'Demonstrate through achievements or examples'
+                    // Fallback: use basic matched/missing keywords if AI data is empty
+                    if (keywords.length === 0) {
+                        (analysis.missingKeywords || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Keyword',
+                                priority: 2,
+                                inResume: false,
+                                inJD: true,
+                                action: 'Add to your resume'
+                            });
                         });
-                    });
-                    analysis.categorizedKeywords.abilities.matched.forEach(kw => {
-                        keywords.push({
-                            keyword: kw,
-                            category: 'Ability',
-                            priority: 2,
-                            inResume: true,
-                            inJD: true,
-                            action: 'Consider strengthening with quantifiable results'
+                        (analysis.matchedKeywords || []).forEach(kw => {
+                            keywords.push({
+                                keyword: kw,
+                                category: 'Keyword',
+                                priority: 2,
+                                inResume: true,
+                                inJD: true,
+                                action: 'Already present'
+                            });
                         });
-                    });
-                    
-                    // Contextual Keywords (Priority 3 - Supporting)
-                    analysis.categorizedKeywords.significantKeywords.missing.forEach(kw => {
-                        keywords.push({
-                            keyword: kw,
-                            category: 'Context',
-                            priority: 3,
-                            inResume: false,
-                            inJD: true,
-                            action: 'Include naturally in work descriptions'
-                        });
-                    });
-                    analysis.categorizedKeywords.significantKeywords.matched.forEach(kw => {
-                        keywords.push({
-                            keyword: kw,
-                            category: 'Context',
-                            priority: 3,
-                            inResume: true,
-                            inJD: true,
-                            action: 'Good contextual alignment'
-                        });
-                    });
+                    }
                     
                     // Sort: Missing first, then by priority
                     keywords.sort((a, b) => {
@@ -661,7 +688,10 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                     
                     const missingCount = keywords.filter(k => !k.inResume).length;
                     const totalCount = keywords.length;
-                    const matchRate = Math.round(((totalCount - missingCount) / totalCount) * 100);
+                    const matchRate = totalCount > 0 ? Math.round(((totalCount - missingCount) / totalCount) * 100) : 0;
+                    
+                    // Don't show if no keywords at all
+                    if (keywords.length === 0) return null;
                     
                     return (
                     <div className="mb-32">
@@ -760,33 +790,6 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                         </div>
                                     </div>
                                 ))}
-                            </div>
-
-                            {/* Legend */}
-                            <div className="mt-6 p-6 bg-neutral-50 border border-neutral-200">
-                                <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600 mb-3">
-                                    Priority Guide
-                                </p>
-                                <div className="grid sm:grid-cols-3 gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="px-2 py-1 bg-black text-white text-[9px] font-medium tracking-[0.08em] uppercase">
-                                            Technical Skill
-                                        </span>
-                                        <span className="text-[11px] text-neutral-600">Critical for role</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="px-2 py-1 bg-neutral-200 text-neutral-700 text-[9px] font-medium tracking-[0.08em] uppercase">
-                                            Ability
-                                        </span>
-                                        <span className="text-[11px] text-neutral-600">Important soft skill</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="px-2 py-1 bg-neutral-100 text-neutral-600 text-[9px] font-medium tracking-[0.08em] uppercase">
-                                            Context
-                                        </span>
-                                        <span className="text-[11px] text-neutral-600">Supporting keyword</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     );
