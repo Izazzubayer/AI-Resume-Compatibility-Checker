@@ -250,7 +250,7 @@ export async function extractAndCategorizeKeywords(
 export async function analyzeRequirementCoverage(
     resumeText: string,
     requirements: string[]
-): Promise<{ requirement: string; coverage: string; confidence: number }[]> {
+): Promise<{ requirement: string; coverage: 'fully covered' | 'partially covered' | 'not covered'; confidence: number }[]> {
     if (!API_KEY) {
         throw new Error('Hugging Face API key not configured');
     }
@@ -287,7 +287,7 @@ export async function analyzeRequirementCoverage(
 
                 results.push({
                     requirement: req,
-                    coverage: labels[0] || 'not covered',
+                    coverage: (labels[0] as 'fully covered' | 'partially covered' | 'not covered') || 'not covered',
                     confidence: scores[0] || 0
                 });
 
@@ -297,7 +297,7 @@ export async function analyzeRequirementCoverage(
                 // Continue with other requirements even if one fails
                 results.push({
                     requirement: req,
-                    coverage: 'not covered',
+                    coverage: 'not covered' as const,
                     confidence: 0
                 });
             }
