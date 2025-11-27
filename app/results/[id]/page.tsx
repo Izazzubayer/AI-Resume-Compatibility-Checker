@@ -597,7 +597,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             <span className="text-[11px] text-neutral-500 font-mono">
                                                 {Math.round(item.confidence * 100)}%
                                         </span>
-                                        </div>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -862,25 +862,25 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             {competitive.percentile} of Applicants
                         </div>
                         <div className="max-w-md mx-auto mb-8">
-                            <div className="h-3 bg-neutral-200 relative mb-2">
+                            <div className="relative mb-2">
                                 <div 
-                                    className="absolute left-0 top-0 h-full bg-black"
-                                    style={{ width: `${competitive.score}%` }}
-                                />
-                            </div>
-                            <div className="relative">
-                                <div className="flex justify-between text-[11px] text-neutral-500">
-                                    <span>0</span>
-                                    <span>100</span>
-                                        </div>
-                                <div 
-                                    className="absolute top-0 transform -translate-x-1/2"
+                                    className="absolute bottom-full mb-2 transform -translate-x-1/2"
                                     style={{ left: `${competitive.score}%` }}
                                 >
                                     <span className="text-[11px] font-semibold text-black whitespace-nowrap">
                                         You ({competitive.score})
                                     </span>
+                                </div>
+                                <div className="h-3 bg-neutral-200 relative">
+                                    <div 
+                                        className="absolute left-0 top-0 h-full bg-black"
+                                        style={{ width: `${competitive.score}%` }}
+                                    />
+                                        </div>
                                     </div>
+                            <div className="flex justify-between text-[11px] text-neutral-500">
+                                <span>0</span>
+                                <span>100</span>
                             </div>
                         </div>
                         <p className="text-[15px] text-neutral-600 leading-[1.6] tracking-[-0.01em]">
