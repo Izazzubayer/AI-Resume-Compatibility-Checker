@@ -780,96 +780,48 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                             Resume Health
                         </h2>
                         <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
-                            Overall quality and alignment of your resume content
+                            How well-formatted is your resume for ATS systems
                         </p>
                     </div>
 
-                    {/* Overall Score Card */}
-                    <div className="border-2 border-black p-12 mb-8">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <div className="text-[14px] font-medium text-neutral-500 mb-2 tracking-[-0.01em]">
-                                    OVERALL HEALTH
-                                </div>
-                                <div className="text-[72px] font-semibold tracking-tight leading-none mb-2">
-                                    {resumeHealth.score}<span className="text-[40px] text-neutral-400">/100</span>
-                                </div>
-                                <div className="flex items-center gap-3 mb-4">
-                                    <div className="px-4 py-1 bg-black text-white text-[16px] font-semibold tracking-tight">
-                                        GRADE {resumeHealth.grade}
-                                    </div>
-                                    <div className={`px-4 py-1 ${
-                                        resumeHealth.score >= 80 ? 'bg-green-100 text-green-700' :
-                                        resumeHealth.score >= 65 ? 'bg-amber-100 text-amber-700' :
-                                        'bg-red-100 text-red-700'
-                                    } text-[14px] font-medium`}>
-                                        {resumeHealth.score >= 80 ? 'STRONG' : resumeHealth.score >= 65 ? 'GOOD' : 'NEEDS WORK'}
-                                    </div>
-                                </div>
-                                <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6] max-w-xl">
-                                    {resumeHealth.message}
-                                </p>
+                    <div className="grid sm:grid-cols-2 gap-8">
+                        <div className="border-2 border-black p-12 text-center">
+                            <div className="text-[120px] font-semibold tracking-tight leading-none mb-4">
+                                {resumeHealth.grade}
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Health Breakdown */}
-                    <div className="grid sm:grid-cols-2 gap-6">
-                        {resumeHealth.breakdown.map((item, idx) => {
-                            const getStatusColor = () => {
-                                if (item.status === 'good') return { bg: 'bg-green-50', border: 'border-green-500', text: 'text-green-700', bar: 'bg-green-500' };
-                                if (item.status === 'fair') return { bg: 'bg-amber-50', border: 'border-amber-500', text: 'text-amber-700', bar: 'bg-amber-500' };
-                                return { bg: 'bg-red-50', border: 'border-red-500', text: 'text-red-700', bar: 'bg-red-500' };
-                            };
-                            const colors = getStatusColor();
-
-                            return (
-                                <div key={idx} className={`border-l-4 ${colors.border} bg-white p-6`}>
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="text-[15px] font-semibold tracking-[-0.01em]">
-                                            {item.metric}
-                                        </div>
-                                        <div className="text-[24px] font-semibold tracking-tight">
-                                            {item.score}
-                                        </div>
-                                    </div>
-                                    
-                                    {/* Progress Bar */}
-                                    <div className="w-full bg-neutral-200 h-1.5 mb-3">
-                                        <div 
-                                            className={`${colors.bar} h-1.5 transition-all`}
-                                            style={{ width: `${item.score}%` }}
-                                        />
-                                    </div>
-
-                                    <div className="text-[13px] text-neutral-600 tracking-[-0.01em] leading-[1.5]">
-                                        {item.detail}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* ATS Issues (if any) */}
-                    {resumeHealth.issues > 0 && (
-                        <div className="mt-6 border border-red-200 bg-red-50 p-6">
-                            <div className="flex items-center gap-2 mb-3">
-                                <span className="text-red-600 text-[16px]">⚠</span>
-                                <div className="text-[14px] font-semibold text-red-900 tracking-[-0.01em]">
-                                    {resumeHealth.issues} ATS Formatting {resumeHealth.issues === 1 ? 'Issue' : 'Issues'} Detected
-                                </div>
+                            <div className="text-[20px] font-medium mb-2 tracking-[-0.01em]">
+                                Health Score: {resumeHealth.score}%
                             </div>
-                            <ul className="space-y-2">
-                                {analysis.atsCompatibility.issues.map((issue, idx) => (
-                                    <li key={idx} className="text-[13px] text-red-900 tracking-[-0.01em] leading-[1.6] flex items-start gap-2">
-                                        <span>•</span>
-                                        <span>{issue}</span>
-                                    </li>
-                                ))}
-                            </ul>
+                            <p className="text-[13px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
+                                {resumeHealth.message}
+                            </p>
                         </div>
-                    )}
-                </div>
+
+                        <div className="border border-neutral-200 p-8">
+                            <div className="mb-8">
+                                <div className="text-[40px] font-semibold text-green-600 mb-2">{resumeHealth.strengths}</div>
+                                <div className="text-[13px] text-neutral-500 tracking-[-0.01em]">Checks Passed</div>
+                            </div>
+                            <div className="mb-8">
+                                <div className="text-[40px] font-semibold text-red-600 mb-2">{resumeHealth.issues}</div>
+                                <div className="text-[13px] text-neutral-500 tracking-[-0.01em]">Issues Detected</div>
+                            </div>
+                            {resumeHealth.issues > 0 && (
+                                <div className="pt-6 border-t border-neutral-200">
+                                    <div className="text-[13px] font-semibold mb-3 tracking-[-0.01em]">Issues:</div>
+                                    <ul className="space-y-2">
+                                        {analysis.atsCompatibility.issues.map((issue, idx) => (
+                                            <li key={idx} className="text-[13px] text-neutral-600 tracking-[-0.01em] leading-[1.6] flex items-start gap-2">
+                                                <span>•</span>
+                                                <span>{issue}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                                    </div>
+                                </div>
 
                 {/* Competitive Positioning */}
                 <div className="mb-32">
