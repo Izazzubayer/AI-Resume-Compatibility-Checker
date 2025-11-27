@@ -467,29 +467,29 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
 
                             {/* Summary Stats */}
                             <div className="grid grid-cols-3 gap-4 mb-12">
-                                <div className="border-2 border-black p-6 text-center">
+                                {/* <div className="border-2 border-black p-6 text-center">
                                     <div className="text-[48px] font-semibold tracking-tight leading-none mb-2">
                                         {fullyCovered.length}
                                     </div>
                                     <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
                                         Requirements Met
                                     </div>
-                                </div>
-                                <div className="border border-neutral-200 p-6 text-center">
+                                </div> */}
+                                {/* <div className="border border-neutral-200 p-6 text-center">
                                     <div className="text-[48px] font-semibold tracking-tight leading-none mb-2 text-amber-600">
                                         {partiallyCovered.length}
                                     </div>
                                     <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
                                         Need Strengthening
                                     </div>
-                                </div>
+                                </div> */}
                                 <div className="border border-neutral-200 p-6 text-center">
                                     <div className="text-[48px] font-semibold tracking-tight leading-none mb-2 text-red-600">
                                         {notCovered.length}
                                     </div>
                                     <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
                                         Critical Gaps
-                                    </div>
+                        </div>
                     </div>
                 </div>
 
@@ -502,26 +502,18 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                                             Critical Gaps ({notCovered.length})
                                         </h3>
                                         <p className="text-[13px] text-neutral-600 tracking-[-0.01em]">
-                                            These requirements are missing from your resume. Address these first.
+                                            These requirements are missing from your resume. From the list below, add specific examples, projects, or experiences that demonstrate the following requirements.
                                         </p>
                                     </div>
                                     <div className="space-y-3">
                                         {notCovered.map((item, idx) => (
                                             <div key={idx} className="border-l-4 border-red-600 bg-red-50 p-6">
-                                                <div className="flex items-start justify-between gap-4 mb-4">
-                                                    <p className="text-[15px] text-neutral-900 tracking-[-0.01em] leading-[1.6] flex-1 font-medium">
+                                                <div className="flex items-start justify-between gap-4">
+                                                    <p className="text-[15px] text-red-700 tracking-[-0.01em] leading-[1.6] flex-1 font-medium">
                                                         {item.requirement}
                                                     </p>
-                                                    <span className="text-[11px] text-neutral-500 font-mono flex-shrink-0">
-                                                        {Math.round(item.confidence * 100)}% confidence
-                        </span>
                     </div>
-                                                <div className="bg-white border border-red-200 p-4 mt-3">
-                                                    <p className="text-[13px] text-neutral-700 tracking-[-0.01em] leading-[1.6]">
-                                                        <span className="font-semibold text-red-700">Action: </span>
-                                                        Add specific examples, projects, or experiences that demonstrate this requirement. Use relevant keywords naturally in your resume.
-                                                    </p>
-                                                </div>
+                                                
                                             </div>
                                         ))}
                                     </div>
@@ -590,190 +582,215 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
                     );
                 })()}
 
-                {/* Keyword Categorization */}
-                {analysis.categorizedKeywords && (
+                {/* Keyword Gap Analysis - Table Format */}
+                {analysis.categorizedKeywords && (() => {
+                    // Build comprehensive keyword list
+                    const keywords: Array<{keyword: string; category: string; priority: number; inResume: boolean; inJD: boolean; action: string}> = [];
+                    
+                    // Technical Skills (Priority 1 - Critical)
+                    analysis.categorizedKeywords.technicalSkills.missing.forEach(kw => {
+                        keywords.push({
+                            keyword: kw,
+                            category: 'Technical Skill',
+                            priority: 1,
+                            inResume: false,
+                            inJD: true,
+                            action: 'Add this skill with specific examples or certifications'
+                        });
+                    });
+                    analysis.categorizedKeywords.technicalSkills.matched.forEach(kw => {
+                        keywords.push({
+                            keyword: kw,
+                            category: 'Technical Skill',
+                            priority: 1,
+                            inResume: true,
+                            inJD: true,
+                            action: 'Keep prominent - already well-positioned'
+                        });
+                    });
+                    
+                    // Abilities (Priority 2 - Important)
+                    analysis.categorizedKeywords.abilities.missing.forEach(kw => {
+                        keywords.push({
+                            keyword: kw,
+                            category: 'Ability',
+                            priority: 2,
+                            inResume: false,
+                            inJD: true,
+                            action: 'Demonstrate through achievements or examples'
+                        });
+                    });
+                    analysis.categorizedKeywords.abilities.matched.forEach(kw => {
+                        keywords.push({
+                            keyword: kw,
+                            category: 'Ability',
+                            priority: 2,
+                            inResume: true,
+                            inJD: true,
+                            action: 'Consider strengthening with quantifiable results'
+                        });
+                    });
+                    
+                    // Contextual Keywords (Priority 3 - Supporting)
+                    analysis.categorizedKeywords.significantKeywords.missing.forEach(kw => {
+                        keywords.push({
+                            keyword: kw,
+                            category: 'Context',
+                            priority: 3,
+                            inResume: false,
+                            inJD: true,
+                            action: 'Include naturally in work descriptions'
+                        });
+                    });
+                    analysis.categorizedKeywords.significantKeywords.matched.forEach(kw => {
+                        keywords.push({
+                            keyword: kw,
+                            category: 'Context',
+                            priority: 3,
+                            inResume: true,
+                            inJD: true,
+                            action: 'Good contextual alignment'
+                        });
+                    });
+                    
+                    // Sort: Missing first, then by priority
+                    keywords.sort((a, b) => {
+                        if (a.inResume !== b.inResume) return a.inResume ? 1 : -1;
+                        return a.priority - b.priority;
+                    });
+                    
+                    const missingCount = keywords.filter(k => !k.inResume).length;
+                    const totalCount = keywords.length;
+                    const matchRate = Math.round(((totalCount - missingCount) / totalCount) * 100);
+                    
+                    return (
                     <div className="mb-32">
-                        <div className="mb-12">
-                            <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
-                                Keyword Analysis
+                            <div className="mb-12">
+                                <h2 className="text-[32px] font-semibold mb-3 tracking-[-0.02em]">
+                                    Keyword Gap Matrix
                         </h2>
-                            <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
-                                AI-categorized keywords with {keywordDensity.matchRate}% coverage ({keywordDensity.coverage})
-                            </p>
-                        </div>
+                                <p className="text-[15px] text-neutral-600 tracking-[-0.01em] leading-[1.6]">
+                                    Detailed keyword comparison between your resume and job requirements
+                                </p>
+                            </div>
 
-                        {/* Technical Skills */}
-                        {(analysis.categorizedKeywords.technicalSkills.matched.length > 0 || 
-                          analysis.categorizedKeywords.technicalSkills.missing.length > 0) && (
-                            <div className="mb-12">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <h3 className="text-[19px] font-semibold tracking-[-0.01em]">
-                                        Technical Skills
-                                    </h3>
-                                    <span className="px-2 py-1 bg-black text-white text-[10px] font-medium tracking-[0.08em] uppercase">
-                                        Critical
-                                    </span>
-                                </div>
-
-                                <div className="grid sm:grid-cols-2 gap-6">
-                                    <div className="border border-neutral-200 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <CheckOutlined style={{ fontSize: '16px' }} />
-                                            <p className="text-[13px] font-semibold tracking-[-0.01em]">
-                                                In Your Resume
-                                            </p>
-                                        </div>
-                                        {analysis.categorizedKeywords.technicalSkills.matched.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2">
-                                                {analysis.categorizedKeywords.technicalSkills.matched.map((keyword, idx) => (
-                                                    <span key={idx} className="text-[13px] tracking-[-0.01em]">
-                                                        {keyword}{idx < analysis.categorizedKeywords!.technicalSkills.matched.length - 1 ? ',' : ''}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[13px] text-neutral-400 italic">None detected</p>
-                                        )}
+                            {/* Summary Stats */}
+                            <div className="grid grid-cols-3 gap-4 mb-8">
+                                <div className="border-2 border-black p-6 text-center">
+                                    <div className="text-[48px] font-semibold tracking-tight leading-none mb-2">
+                                        {matchRate}%
                                     </div>
-
-                                    <div className="border border-neutral-200 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <CloseOutlined style={{ fontSize: '16px' }} />
-                                            <p className="text-[13px] font-semibold tracking-[-0.01em]">
-                                                Missing
-                                            </p>
-                                        </div>
-                                        {analysis.categorizedKeywords.technicalSkills.missing.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2">
-                                                {analysis.categorizedKeywords.technicalSkills.missing.map((keyword, idx) => (
-                                                    <span key={idx} className="text-[13px] tracking-[-0.01em]">
-                                                        {keyword}{idx < analysis.categorizedKeywords!.technicalSkills.missing.length - 1 ? ',' : ''}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[13px] text-neutral-400 italic">All present</p>
-                                        )}
+                                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
+                                        Match Rate
+                                    </div>
+                                </div>
+                                <div className="border border-neutral-200 p-6 text-center">
+                                    <div className="text-[48px] font-semibold tracking-tight leading-none mb-2 text-green-600">
+                                        {totalCount - missingCount}
+                                    </div>
+                                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
+                                        Keywords Present
+                                    </div>
+                                </div>
+                                <div className="border border-neutral-200 p-6 text-center">
+                                    <div className="text-[48px] font-semibold tracking-tight leading-none mb-2 text-red-600">
+                                        {missingCount}
+                                    </div>
+                                    <div className="text-[11px] tracking-[0.08em] uppercase text-neutral-500 font-medium">
+                                        Keywords Missing
                                     </div>
                                 </div>
                             </div>
-                        )}
 
-                        {/* Abilities */}
-                        {(analysis.categorizedKeywords.abilities.matched.length > 0 || 
-                          analysis.categorizedKeywords.abilities.missing.length > 0) && (
-                            <div className="mb-12">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <h3 className="text-[19px] font-semibold tracking-[-0.01em]">
-                                        Abilities
-                                    </h3>
-                                    <span className="px-2 py-1 border border-neutral-400 text-neutral-600 text-[10px] font-medium tracking-[0.08em] uppercase">
-                                        Important
-                                    </span>
-                                </div>
-
-                                <div className="grid sm:grid-cols-2 gap-6">
-                                    <div className="border border-neutral-200 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <CheckOutlined style={{ fontSize: '16px' }} />
-                                            <p className="text-[13px] font-semibold tracking-[-0.01em]">
-                                                In Your Resume
-                                            </p>
-                                        </div>
-                                        {analysis.categorizedKeywords.abilities.matched.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2">
-                                                {analysis.categorizedKeywords.abilities.matched.map((keyword, idx) => (
-                                                    <span key={idx} className="text-[13px] tracking-[-0.01em]">
-                                                        {keyword}{idx < analysis.categorizedKeywords!.abilities.matched.length - 1 ? ',' : ''}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[13px] text-neutral-400 italic">None detected</p>
-                                        )}
+                            {/* Keywords Table */}
+                            <div className="border border-neutral-200 overflow-hidden">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-[2fr_1fr_1fr_1fr_3fr] gap-4 p-4 bg-neutral-50 border-b border-neutral-200">
+                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600">
+                                        Keyword
                                     </div>
-
-                                    <div className="border border-neutral-200 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <CloseOutlined style={{ fontSize: '16px' }} />
-                                            <p className="text-[13px] font-semibold tracking-[-0.01em]">
-                                                Missing
-                                            </p>
-                                        </div>
-                                        {analysis.categorizedKeywords.abilities.missing.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2">
-                                                {analysis.categorizedKeywords.abilities.missing.map((keyword, idx) => (
-                                                    <span key={idx} className="text-[13px] tracking-[-0.01em]">
-                                                        {keyword}{idx < analysis.categorizedKeywords!.abilities.missing.length - 1 ? ',' : ''}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[13px] text-neutral-400 italic">All present</p>
-                                        )}
+                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600">
+                                        Category
+                                    </div>
+                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600 text-center">
+                                        In Resume
+                                    </div>
+                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600 text-center">
+                                        In Job
+                                    </div>
+                                    <div className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600">
+                                        Recommended Action
                                     </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* Contextual Keywords */}
-                        {(analysis.categorizedKeywords.significantKeywords.matched.length > 0 || 
-                          analysis.categorizedKeywords.significantKeywords.missing.length > 0) && (
-                            <div>
-                                <div className="flex items-center gap-3 mb-6">
-                                    <h3 className="text-[19px] font-semibold tracking-[-0.01em]">
-                                        Contextual Keywords
-                                    </h3>
-                                    <span className="px-2 py-1 border border-neutral-300 text-neutral-500 text-[10px] font-medium tracking-[0.08em] uppercase">
-                                        Context
-                                    </span>
-                                </div>
-
-                                <div className="grid sm:grid-cols-2 gap-6">
-                                    <div className="border border-neutral-200 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <CheckOutlined style={{ fontSize: '16px' }} />
-                                            <p className="text-[13px] font-semibold tracking-[-0.01em]">
-                                                In Your Resume
-                                            </p>
+                                {/* Table Body */}
+                                {keywords.map((item, idx) => (
+                                    <div 
+                                        key={idx} 
+                                        className={`grid grid-cols-[2fr_1fr_1fr_1fr_3fr] gap-4 p-4 border-b border-neutral-100 hover:bg-neutral-50 transition-colors ${
+                                            !item.inResume ? 'bg-red-50' : ''
+                                        }`}
+                                    >
+                                        <div className={`text-[13px] tracking-[-0.01em] font-medium ${
+                                            !item.inResume ? 'text-red-700' : 'text-neutral-900'
+                                        }`}>
+                                            {item.keyword}
                                         </div>
-                                        {analysis.categorizedKeywords.significantKeywords.matched.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2">
-                                                {analysis.categorizedKeywords.significantKeywords.matched.map((keyword, idx) => (
-                                                    <span key={idx} className="text-[13px] tracking-[-0.01em]">
-                                                        {keyword}{idx < analysis.categorizedKeywords!.significantKeywords.matched.length - 1 ? ',' : ''}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <p className="text-[13px] text-neutral-400 italic">None detected</p>
-                                        )}
-                                    </div>
-
-                                    <div className="border border-neutral-200 p-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <CloseOutlined style={{ fontSize: '16px' }} />
-                                            <p className="text-[13px] font-semibold tracking-[-0.01em]">
-                                                Missing
-                                            </p>
-                                        </div>
-                                        {analysis.categorizedKeywords.significantKeywords.missing.length > 0 ? (
-                                            <div className="flex flex-wrap gap-2">
-                                                {analysis.categorizedKeywords.significantKeywords.missing.map((keyword, idx) => (
-                                                    <span key={idx} className="text-[13px] tracking-[-0.01em]">
-                                                        {keyword}{idx < analysis.categorizedKeywords!.significantKeywords.missing.length - 1 ? ',' : ''}
+                                        <div className="flex items-center">
+                                            <span className={`px-2 py-1 text-[9px] font-medium tracking-[0.08em] uppercase ${
+                                                item.priority === 1 ? 'bg-black text-white' :
+                                                item.priority === 2 ? 'bg-neutral-200 text-neutral-700' :
+                                                'bg-neutral-100 text-neutral-600'
+                                            }`}>
+                                                {item.category}
                                 </span>
-                            ))}
-                        </div>
-                                        ) : (
-                                            <p className="text-[13px] text-neutral-400 italic">All present</p>
-                                        )}
+                                        </div>
+                                        <div className="text-center">
+                                            {item.inResume ? (
+                                                <span className="inline-block w-6 h-6 bg-green-100 text-green-700 flex items-center justify-center text-[14px]">✓</span>
+                                            ) : (
+                                                <span className="inline-block w-6 h-6 bg-red-100 text-red-700 flex items-center justify-center text-[14px]">—</span>
+                                            )}
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="inline-block w-6 h-6 bg-blue-100 text-blue-700 flex items-center justify-center text-[14px]">✓</span>
+                                        </div>
+                                        <div className="text-[12px] text-neutral-600 tracking-[-0.01em] leading-[1.5]">
+                                            {item.action}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Legend */}
+                            <div className="mt-6 p-6 bg-neutral-50 border border-neutral-200">
+                                <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-neutral-600 mb-3">
+                                    Priority Guide
+                                </p>
+                                <div className="grid sm:grid-cols-3 gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-1 bg-black text-white text-[9px] font-medium tracking-[0.08em] uppercase">
+                                            Technical Skill
+                                        </span>
+                                        <span className="text-[11px] text-neutral-600">Critical for role</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-1 bg-neutral-200 text-neutral-700 text-[9px] font-medium tracking-[0.08em] uppercase">
+                                            Ability
+                                        </span>
+                                        <span className="text-[11px] text-neutral-600">Important soft skill</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-2 py-1 bg-neutral-100 text-neutral-600 text-[9px] font-medium tracking-[0.08em] uppercase">
+                                            Context
+                                        </span>
+                                        <span className="text-[11px] text-neutral-600">Supporting keyword</span>
                                     </div>
                                 </div>
                             </div>
-                        )}
-                    </div>
-                )}
+                        </div>
+                    );
+                })()}
 
                 {/* Resume Health Score */}
                 <div className="mb-32">
